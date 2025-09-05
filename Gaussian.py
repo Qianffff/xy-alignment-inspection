@@ -1,6 +1,4 @@
 import numpy as np
-
-import numpy as np
 from scipy.optimize import fsolve
 
 def gaussian_beam(I_opt, sigma, size=256):

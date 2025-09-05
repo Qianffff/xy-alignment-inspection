@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.optimize import fsolve
+import matplotlib.pyplot as plt
 
 # ===============================
 # Constants
@@ -16,41 +18,59 @@ Sc = 0.967
 # Input parameters (need to be set)
 # ===============================
 
-V = 30000            # Accelerating voltage (V)
+V = 300000           # Accelerating voltage (V)
 Lambda = 1.226e-9 / (V**0.5)
 # Electron wavelength (m), from accelerating voltage V
 Br = 1e8             # Reduced brightness (A/m^2·sr·V)
 alpha = 5e-3         # Aperture semi-angle (rad)
 d_source = 30e-9     # Source size (m)
 M = 1000             # Magnification (from source to image plane)
-dE = 0.5             # Energy spread (eV)
+dU = 0.5             # Energy spread (eV)
 
 # Aberration coefficients
 Cs = 1e-3            # Spherical aberration coefficient (m)
-Cc = 1e-3            # Chromatic aberration coefficient (m)
-
-
-"""
-RPS of J. E. Barth and P. Kruit method for calculating probe size (FW50 value):
-d_p = ( ( (((d_a^4 + d_s^4)^(1/4))^1.3 + d_geo^1.3 )^(1/1.3))^2 + d_c^2 + d_{e-e}^2 )^(1/2)
+Cc = 2               # Chromatic aberration coefficient (m)
 
 
 
-Components of probe size:
+# ===============================
+# IRPS of J. E. Barth and P. Kruit method for calculating probe size (FW50 value)
+# ===============================
 
-Geometric image of the source (d_geo) - only this contribution carries the current:
-d_geo = M * d_v = (2/π) * sqrt(I_p / (B_r * V))* (1/alpha)
+def d_p_func(I_p):
+    # Geometric contribution (depends on I_p)
+    d_geo = (2/np.pi) * np.sqrt(I_p / (Br * V)) / alpha
 
-Diffraction contribution (d_a):
-d_a = 0.54 * λ / alpha = 0.54 * (Λ / V^(1/2)) * (1/alpha)
-where Λ = 1.226e-9 m·V^(1/2)
+    # Diffraction contribution
+    d_a = 0.54 * Lambda / alpha
 
-Spherical aberration contribution (d_s):
-d_s = 0.18 * C_s * alpha^3
+    # Spherical aberration
+    d_s = 0.18 * Cs * alpha**3
 
-Chromatic aberration contribution (d_c):
-d_c = 0.6 * C_c * (ΔU/U) * alpha
+    # Chromatic aberration
+    d_c = 0.6 * Cc * (dU / V) * alpha
 
-Current in the probe:
-I_p = B_r * (π/4) * (d_geo)^2 * π * alpha^2 * V
-"""
+    # RPS combined probe size
+    d_p = np.sqrt( ((d_a**4 + d_s**4)**0.25**1.3 + d_geo**1.3)**(1/1.3)**2 + d_c**2 )
+    return d_p
+
+
+# ===============================
+# Generate I_p values (log scale)
+# ===============================
+
+I_values = np.logspace(-14, -9, 200)
+d_values = np.array([d_p_func(I) for I in I_values])
+
+# ===============================
+# Plot
+# ===============================
+
+plt.figure(figsize=(6,4))
+plt.plot(I_values*1e12, d_values*1e9)  # Convert to pA and nm
+plt.xscale('log')
+plt.xlabel("Probe Current I_p (pA)")
+plt.ylabel("Probe Diameter d_p (nm)")
+plt.title("Probe Size vs. Probe Current")
+plt.grid(True, which='both', ls='--', alpha=0.5)
+plt.show()

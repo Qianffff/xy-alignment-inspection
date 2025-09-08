@@ -19,19 +19,19 @@ Lambda = 1.226e-9
 # Input parameters (need to be set)
 # ===============================
 
-V = 300000           # Accelerating voltage (V)
+V = 300000             # Accelerating voltage (V)
 elambda = Lambda / (V**0.5)
 # Electron wavelength (m), from accelerating voltage V
 Br = 1e8             # Reduced brightness (A/m^2·sr·V)
-alpha = 5e-3         # Aperture semi-angle (rad)
 d_source = 30e-9     # Source size (m)
 M = 1000             # Magnification (from source to image plane)
 dU = 0.5             # Energy spread (eV)
 
 # Aberration coefficients
 Cs = 1e-3            # Spherical aberration coefficient (m)
-Cc = 2               # Chromatic aberration coefficient (m)
+Cc = 2e-3               # Chromatic aberration coefficient (m)
 
+alpha = 1.23*(Lambda/Cs/np.sqrt(V))**(0.25)         # Aperture semi-angle (rad) Default: optimized value for no chromatic contribution
 
 
 # ===============================
@@ -53,16 +53,20 @@ def d_p_func(I_p):
     d_geo = (2/np.pi) * np.sqrt(I_p / (Br * V)) / alpha
 
     # Diffraction contribution
-    d_a = 0.54 * Lambda / alpha
+    d_a = 0.54 * elambda / alpha
 
     # Spherical aberration
     d_s = 0.18 * Cs * alpha**3
 
     # Chromatic aberration
     d_c = 0.6 * Cc * (dU / V) * alpha
+    d_c=0
 
     # RPS combined probe size
-    d_p = np.sqrt( ((d_a**4 + d_s**4)**0.25**1.3 + d_geo**1.3)**(1/1.3)**2 + d_c**2 )
+    d_as = (d_a**4 + d_s**4)**0.25           # spherical aberration-limited term
+    d_asg = (d_as**1.3 + d_geo**1.3)**(1/1.3) # geometric combination
+    d_p = np.sqrt(d_asg**2 + d_c**2)          # include chromatic
+
     return d_p
 
 

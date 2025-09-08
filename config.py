@@ -13,13 +13,14 @@ hbar = h / (2 * np.pi)  # Reduced Planck constant
 Sc = 0.967
 # Sc: scattering coefficient (~0.967), an empirical factor from fitting
 # Coulomb scattering theory to experiments.
+Lambda = 1.226e-9
 
 # ===============================
 # Input parameters (need to be set)
 # ===============================
 
 V = 300000           # Accelerating voltage (V)
-Lambda = 1.226e-9 / (V**0.5)
+elambda = Lambda / (V**0.5)
 # Electron wavelength (m), from accelerating voltage V
 Br = 1e8             # Reduced brightness (A/m^2·sr·V)
 alpha = 5e-3         # Aperture semi-angle (rad)
@@ -38,6 +39,16 @@ Cc = 2               # Chromatic aberration coefficient (m)
 # ===============================
 
 def d_p_func(I_p):
+    """
+    Calculate the effective electron probe size.
+
+    Parameters:
+    I_p: probe current (A)
+
+    Returns: 
+    d_p: effective probe size (m)
+    """
+
     # Geometric contribution (depends on I_p)
     d_geo = (2/np.pi) * np.sqrt(I_p / (Br * V)) / alpha
 
@@ -55,22 +66,16 @@ def d_p_func(I_p):
     return d_p
 
 
-# ===============================
-# Generate I_p values (log scale)
-# ===============================
 
+#Testing
 I_values = np.logspace(-14, -9, 200)
 d_values = np.array([d_p_func(I) for I in I_values])
 
-# ===============================
-# Plot
-# ===============================
-
 plt.figure(figsize=(6,4))
-plt.plot(I_values*1e12, d_values*1e9)  # Convert to pA and nm
-plt.xscale('log')
-plt.xlabel("Probe Current I_p (pA)")
-plt.ylabel("Probe Diameter d_p (nm)")
+plt.plot( d_values*1e9, I_values*1e12)  # Convert to pA and nm
+plt.yscale('log')
+plt.ylabel("Probe Current I_p (pA)")
+plt.xlabel("Probe Diameter d_p (nm)")
 plt.title("Probe Size vs. Probe Current")
 plt.grid(True, which='both', ls='--', alpha=0.5)
 plt.show()

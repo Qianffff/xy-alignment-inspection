@@ -39,10 +39,10 @@ significant, and the signal to noise ratio is low. Increasing one of the two (or
 in a higher signal to noise ratio.
 """
 
-# Width of pixel and frame in nanometer:
+# Width of pixel and frame in meter:
 pixel_width_x = 2e-9 
 pixel_width_y = pixel_width_x
-frame_width_x = 1e-6 # = 1000 nm
+frame_width_x = 1e-6
 frame_width_y = frame_width_x
 
 
@@ -52,12 +52,14 @@ pixels_y = int(np.rint(frame_width_y/pixel_width_y))
 
 # Can be seen as grid of secondary electron escape factor
 # Use the first to have some randomness, and the second for a uniform SE escape factor
-grid = np.random.random([pixels_x,pixels_y])/2
-# grid = np.ones([pixels_x,pixels_y])*0.1
+grid = np.random.random([pixels_x,pixels_y])
+# grid = np.ones([pixels_x,pixels_y])
 
 # Create a line of high SE escape factor vertically in the middle of the grid.
 grid[:,int(np.floor(pixels_x/2))] += 1
+# Create a line of high SE escape factor horizontally in the middle of the grid.
 grid[int(np.floor(pixels_y/2)),:] += 1
+# Remove the added value in the intersection of the lines
 grid[int(np.floor(pixels_y/2)),int(np.floor(pixels_x/2))] -= 1
 
 
@@ -82,6 +84,33 @@ def gauss_kernel(gauss_pixels,sigma,shift_x,shift_y):
     kernel = kernel / kernel.sum()
     return kernel
 
+def convolve_at_pixel(grid, kernel, i, j):
+    kh, kw = kernel.shape
+    ph, pw = kh // 2, kw // 2  # Half-size of the kernel
+
+    # Grid boundaries
+    h, w = grid.shape
+
+    # Compute the bounds of the patch in the grid
+    i_start = max(i - ph, 0)
+    i_end   = min(i + ph, h)
+
+    j_start = max(j - pw, 0)
+    j_end   = min(j + pw, w)
+    # Extract the patch from the grid
+    patch = grid[i_start:i_end, j_start:j_end]
+
+    # Now crop the kernel accordingly
+    k_i_start = ph - (i - i_start)
+    k_i_end   = k_i_start + patch.shape[0] 
+
+    k_j_start = pw - (j - j_start)
+    k_j_end   = k_j_start + patch.shape[1]
+    kernel_cropped = kernel[k_i_start:k_i_end, k_j_start:k_j_end]
+
+    # Elementwise multiply and sum
+    return np.sum(patch * kernel_cropped)
+    
 # Show the Gauss kernel 
 kernel = gauss_kernel(310,50,0,100)
 plt.figure(figsize=(13,13))
@@ -126,7 +155,7 @@ half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # in pixels
 
 # To store images for each error_m value
 picture_grids = []
-error_values = [0, 5e-9]  # in meters
+error_values = [0, 10e-9]  # in meters
 
 for error_m in error_values:
     expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
@@ -140,12 +169,9 @@ for error_m in error_values:
             kernel_ij = gauss_kernel(2*half_pixel_width_gaussian_kernel+1,
                                      sigma,error_shift_x,error_shift_y)
 
-            expected_number_of_secondary_electrons[i, j] = convolve2d(
-                grid,
-                kernel_ij,
-                mode='same',
-                boundary='fill',
-                fillvalue=0.5)[i, j]
+            expected_number_of_secondary_electrons[i, j] = convolve_at_pixel(
+                grid, kernel_ij, i, j)
+    
 
     # Multiply by intensity and scan time
     expected_number_of_secondary_electrons *= intensity_beam * scan_time_per_pixel

@@ -19,19 +19,19 @@ Lambda = 1.226e-9
 # Input parameters (need to be set)
 # ===============================
 
-V = 300000             # Accelerating voltage (V)
+V = 300000           # Accelerating voltage (V)
 elambda = Lambda / (V**0.5)
 # Electron wavelength (m), from accelerating voltage V
 Br = 1e8             # Reduced brightness (A/m^2·sr·V)
+alpha = 5e-3         # Aperture semi-angle (rad)
 d_source = 30e-9     # Source size (m)
 M = 1000             # Magnification (from source to image plane)
 dU = 0.5             # Energy spread (eV)
 
 # Aberration coefficients
-Cs = 1e-3            # Spherical aberration coefficient (m)
-Cc = 2e-3               # Chromatic aberration coefficient (m)
+Cs = 1e-3           # Spherical aberration coefficient (m)
+Cc = 2               # Chromatic aberration coefficient (m)
 
-alpha = 1.23*(Lambda/Cs/np.sqrt(V))**(0.25)         # Aperture semi-angle (rad) Default: optimized value for no chromatic contribution
 
 
 # ===============================
@@ -54,21 +54,16 @@ def d_p_func(I_p):
 
     # Diffraction contribution
     d_a = 0.54 * elambda / alpha
-
+    
     # Spherical aberration
     d_s = 0.18 * Cs * alpha**3
-
+    
     # Chromatic aberration
     d_c = 0.6 * Cc * (dU / V) * alpha
-    d_c=0
-
+    
     # RPS combined probe size
-    d_as = (d_a**4 + d_s**4)**0.25           # spherical aberration-limited term
-    d_asg = (d_as**1.3 + d_geo**1.3)**(1/1.3) # geometric combination
-    d_p = np.sqrt(d_asg**2 + d_c**2)          # include chromatic
-
+    d_p = np.sqrt(((((d_a**4 + d_s**4)**0.25)**1.3 + d_geo**1.3)**(1/1.3))**2 + d_c**2 )
     return d_p
-
 
 
 def find_optimal_probe_current():
@@ -105,7 +100,9 @@ def find_optimal_probe_current():
     
     return I_optimal, d_min
 
-# Find and display the optimal probe current
-I_optimal, d_min = find_optimal_probe_current()
-print(f"Optimal probe current: {I_optimal:.2e} A")
-print(f"Minimum probe size: {d_min:.2e} m ({d_min*1e9:.2f} nm)")
+if __name__ == "__main__":
+    
+    # Find and display the optimal probe current
+    I_optimal, d_min = find_optimal_probe_current()
+    print(f"Optimal probe current: {I_optimal:.2e} A")
+    print(f"Minimum probe size: {d_min:.2e} m ({d_min*1e9:.2f} nm)")

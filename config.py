@@ -67,15 +67,41 @@ def d_p_func(I_p):
 
 
 
-#Testing
-I_values = np.logspace(-14, -9, 200)
-d_values = np.array([d_p_func(I) for I in I_values])
+def find_optimal_probe_current():
+    """
+    Find the optimal probe current that minimizes the probe size and plot the results.
+    
+    Returns:
+    I_optimal: optimal probe current (A)
+    d_min: minimum probe size (m)
+    """
+    # Generate current values
+    I_values = np.logspace(-14, -9, 200)
+    d_values = np.array([d_p_func(I) for I in I_values])
+    
+    # Find the minimum probe size and corresponding current
+    min_index = np.argmin(d_values)
+    I_optimal = I_values[min_index]
+    d_min = d_values[min_index]
+    
+    # Create the plot
+    plt.figure(figsize=(8, 6))
+    plt.plot( d_values*1e9, I_values*1e12, label='Probe Size vs Current')  # Convert to pA and nm
+    plt.scatter( d_min*1e9, I_optimal*1e12, color='red', s=50, 
+                label=f'Optimal: {I_optimal*1e12:.2f} pA, {d_min*1e9:.2f} nm')
+    
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel("Probe Current I_p (pA)")
+    plt.xlabel("Probe Diameter d_p (nm)")
+    plt.title("Probe Size vs. Probe Current")
+    plt.grid(True, which='both', ls='--', alpha=0.5)
+    plt.legend()
+    plt.show()
+    
+    return I_optimal, d_min
 
-plt.figure(figsize=(6,4))
-plt.plot( d_values*1e9, I_values*1e12)  # Convert to pA and nm
-plt.yscale('log')
-plt.ylabel("Probe Current I_p (pA)")
-plt.xlabel("Probe Diameter d_p (nm)")
-plt.title("Probe Size vs. Probe Current")
-plt.grid(True, which='both', ls='--', alpha=0.5)
-plt.show()
+# Find and display the optimal probe current
+I_optimal, d_min = find_optimal_probe_current()
+print(f"Optimal probe current: {I_optimal:.2e} A")
+print(f"Minimum probe size: {d_min:.2e} m ({d_min*1e9:.2f} nm)")

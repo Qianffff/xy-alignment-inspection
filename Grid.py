@@ -161,7 +161,7 @@ expected_number_of_secondary_electrons = np.zeros([pixels_x,pixels_y])
 
 # Some parameters
 elementary_charge = 1.60217663 * 10**(-19) # in Coulomb
-intensity_beam_A = 2*10**(-12) # in Ampere
+intensity_beam_A = 1.8*10**(-12) # in Ampere
 intensity_beam = intensity_beam_A/(elementary_charge) # number of electrons per second
 
 # Time parameters (4e-7 based on total image time being 0.1 seconds)
@@ -272,7 +272,7 @@ cross_pixels -= np.size(picture_grid[int(np.floor(pixels_y/2)-cross_pixel_width/
 cross_average = cross_sum/cross_pixels
 
 # Background pixels
-background_grid = picture_grid[int(pixels_y*1/20):int(pixels_y*3/20),int(pixels_x*1/20):int(pixels_x*3/20)]
+background_grid = picture_grid[int(pixels_y*1/20):int(pixels_y*8/20),int(pixels_x*1/20):int(pixels_x*8/20)]
 background_sum = np.sum(background_grid)
 background_pixels = np.size(background_grid)
 background_std = np.std(background_grid)
@@ -283,13 +283,13 @@ CNR = np.abs(cross_average-background_average)/background_std
 print(f"Contrast to noise ratio = {CNR}")
 
 # Making the beam intenisty vs time plot. (Using CNR test CNR = 2)
-scan_time_per_image_array = np.array([0.1])
+scan_time_per_image_array = np.array([0.1,0.11,0.11375,0.115,0.1175,0.1195,0.12125,0.1225,0.1275,0.13,0.13375,0.1375,0.14375,0.15,0.19250,0.19250,0.20000,0.19750,0.22500,0.25250,0.27625,0.30125,0.32750,0.35375,0.39250,0.50000,0.60000,0.77500,0.95000,1.50000,2.95000])
 scan_time_per_pixel_array = scan_time_per_image_array/(pixels_x*pixels_y)
-beam_intensity_A_array = np.array([3,2])*10**(-12)
+beam_intensity_A_array = np.array([3.1,3,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2,1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1])*10**(-12)
 
-# plt.figure()
-# plt.plot(beam_intensity_A_array*10**12,scan_time_per_image_array,"k.-")
-# plt.ylabel("Time per image (s)")
-# plt.xlabel("Beam current (pA)")
-# plt.savefig("I vs time.pdf")
-# plt.show()
+plt.figure()
+plt.plot(beam_intensity_A_array*10**12,scan_time_per_image_array,"k.-")
+plt.xlabel("Beam current (pA)")
+plt.ylabel("Time per 1 µm² image (s)")
+plt.savefig("I vs time.pdf")
+plt.show()

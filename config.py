@@ -30,7 +30,7 @@ dU = 0.5             # Energy spread (eV)
 
 # Aberration coefficients
 Cs = 1e-3           # Spherical aberration coefficient (m)
-Cc = 2               # Chromatic aberration coefficient (m)
+Cc = 2e-3           # Chromatic aberration coefficient (m)
 
 
 
@@ -66,22 +66,38 @@ def d_p_func(I_p):
     return d_p
 
 
-def find_optimal_probe_current():
+def find_optimal_probe_current(I_values, threshold):
     """
     Find the optimal probe current that minimizes the probe size and plot the results.
+
+    Parameters:    
+    I_values : array, probe current values to evaluate (A).
+    threshold : convergence threshold based on the difference between probe sizes
     
     Returns:
     I_optimal: optimal probe current (A)
     d_min: minimum probe size (m)
     """
     # Generate current values
-    I_values = np.logspace(-14, -9, 200)
     d_values = np.array([d_p_func(I) for I in I_values])
     
     # Find the minimum probe size and corresponding current
-    min_index = np.argmin(d_values)
-    I_optimal = I_values[min_index]
-    d_min = d_values[min_index]
+    I_optimal, d_min = None, None
+    # Iterate and check difference between probe sizes
+    for i in range(len(I_values)-1,2,-1):
+        if abs(d_values[i] - d_values[i-2]) < threshold:
+            I_optimal = I_values[i-1]   # middle point
+            d_min = d_values[i-1]
+            print(f"Stopped early at index {i}, "
+                  f"I={I_optimal:.2e} A, d={d_min:.2e} m")
+            break
+
+    # If no convergence, fall back to the true minimum
+    if I_optimal is None:
+        min_index = np.argmin(d_values)
+        I_optimal = I_values[min_index]
+        d_min = d_values[min_index]
+        print(f"No early stop. Using true minimum: I={I_optimal:.2e} A, d={d_min:.2e} m")
     
     # Create the plot
     plt.figure(figsize=(8, 6))
@@ -102,7 +118,10 @@ def find_optimal_probe_current():
 
 if __name__ == "__main__":
     
+    I_values = np.logspace(-14, -9, 200)    #Testing range for probe current
+    threshold =1e-12                        #Convergence threshold for finding optimized current
+
     # Find and display the optimal probe current
-    I_optimal, d_min = find_optimal_probe_current()
+    I_optimal, d_min = find_optimal_probe_current(I_values, threshold)
     print(f"Optimal probe current: {I_optimal:.2e} A")
     print(f"Minimum probe size: {d_min:.2e} m ({d_min*1e9:.2f} nm)")

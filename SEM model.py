@@ -21,7 +21,7 @@ secondary electrons emitted by that pixel.
 """
 test = "test"
 # Beam current (in A)
-beam_current = 20e-12 # 570e-12 based on Zeiss specs sheet
+beam_current = 2e-12 # 570e-12 based on Zeiss specs sheet
 # Scan time per pixel (inverse of the scan rate)
 scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
 

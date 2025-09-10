@@ -20,7 +20,7 @@ factors. We then have the expected number of secondary electrons for each pixel.
 using a Poisson distribution where the expectation value for each pixel is the expected number of 
 secondary electrons emitted by that pixel.
 """
-
+test = "test"
 # Beam current (in A)
 beam_current = 20e-12 # 570e-12 based on Zeiss specs sheet
 # Scan time per pixel (inverse of the scan rate)

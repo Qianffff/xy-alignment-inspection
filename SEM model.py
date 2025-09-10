@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import config as c
 
 """
 The chip and all its features (like edges and alignment marks) are modeled using a grid. The grid 
@@ -127,7 +126,7 @@ picture_grid = np.zeros([pixels_x,pixels_y])
 expected_number_of_secondary_electrons = np.zeros([pixels_x,pixels_y])
 
 # Calculate the beam width given the beam current
-FWHM = c.d_p_func(beam_current) # (in m)
+FWHM = 8e-9 # (in m)
 sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
 sigma = sigma/pixel_width_x # (in px)
 half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)

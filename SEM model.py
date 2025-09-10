@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.ndimage import rotate, shift
+import config as c
 
 """
 The chip and all its features (like edges and alignment marks) are modeled using a grid. The grid 
@@ -19,9 +21,9 @@ factors. We then have the expected number of secondary electrons for each pixel.
 using a Poisson distribution where the expectation value for each pixel is the expected number of 
 secondary electrons emitted by that pixel.
 """
-test = "test"
+
 # Beam current (in A)
-beam_current = 2e-12 # 570e-12 based on Zeiss specs sheet
+beam_current = 5e-13 # 570e-12 based on Zeiss specs sheet
 # Scan time per pixel (inverse of the scan rate)
 scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
 
@@ -42,9 +44,7 @@ pixels_x = int(np.rint(frame_width_x/pixel_width_x))
 pixels_y = int(np.rint(frame_width_y/pixel_width_y))
 
 # Grid of secondary electron (SE) escape factors
-# Use the first to have some randomness, and the second for a constant escape factor
-grid = np.random.random([pixels_x,pixels_y])
-# grid = np.ones([pixels_x,pixels_y])
+grid = np.zeros([pixels_x,pixels_y])
 
 # Create alignment mark (a cross of high SE escape factor (background +1 in the middle of the grid)
 # Dimensions in meter
@@ -52,29 +52,60 @@ cross_length = 100e-9
 cross_line_width = 14e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
 
 # Dimensions in pixels
-cross_pixel_length = int(cross_length/pixel_width_x)
-cross_pixel_width = int(cross_line_width/pixel_width_x)
+cross_pixel_length = int(np.round(cross_length/pixel_width_x))
+cross_pixel_width = int(np.round(cross_line_width/pixel_width_x))
 
 # Define some useful parameters about the cross geometry
-cross_pixel_left_side = int(pixels_x/2 - cross_pixel_length/2)
+cross_pixel_left_side = int(np.round(pixels_x/2 - cross_pixel_length/2))
 cross_pixel_right_side = cross_pixel_left_side + cross_pixel_length
 cross_pixel_top_side = cross_pixel_left_side
 cross_pixel_bottom_side = cross_pixel_right_side
-cross_pixel_half_width_plus = int(np.floor(pixels_x/2)+cross_pixel_width/2)
-cross_pixel_half_width_minus = int(np.floor(pixels_x/2)-cross_pixel_width/2)
+cross_pixel_half_width_plus = int(np.round(pixels_x/2+cross_pixel_width/2))
+cross_pixel_half_width_minus = int(np.round(pixels_x/2-cross_pixel_width/2))
 
+# Random position and rotation cross
+max_shift_x = int(np.round(cross_pixel_left_side - 1/8*pixels_x))
+max_shift_y = int(np.round(cross_pixel_top_side - 1/8*pixels_y))
+shift_x = int(np.random.randint(-max_shift_x,max_shift_x))
+shift_y = int(np.random.randint(-max_shift_y,max_shift_y))
+rotation = np.random.uniform(0,90)
+
+# First: create the cross in the middle of the grid
 # Create the vertical line
-grid[cross_pixel_left_side:cross_pixel_right_side,cross_pixel_half_width_minus:cross_pixel_half_width_plus] += 1
+grid[cross_pixel_top_side:cross_pixel_bottom_side,
+     cross_pixel_half_width_minus:cross_pixel_half_width_plus] += 1
 # Create the horizontal line
-grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_top_side:cross_pixel_bottom_side] += 1
+grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
+     cross_pixel_left_side:cross_pixel_right_side] += 1
 # Remove doubly counted region
-grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_half_width_minus:cross_pixel_half_width_plus] -= 1
+grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
+     cross_pixel_half_width_minus:cross_pixel_half_width_plus] -= 1
+
+# Second: rotate the cross
+grid = rotate(grid, angle=rotation, reshape=False, order=3, mode='constant', cval=0)
+# The rotate function may return numbers smaller than zero. This will become problematic
+# later on when using the Poisson distribution. Therefore we now set all negative numbers
+# (which are very small like -6e-144) to zero. This is justified because they are already
+# very small and since we can not have a negative number of secondary electrons
+grid[grid < 0] = 0
+
+# Third: shift the rotated cross
+grid = shift(grid, shift=(shift_y, shift_x), order=3, mode='constant', cval=0)
+
+# Fourth: add noise in background
+# Use the first to have some randomness, and the second for a constant escape factor
+grid += np.random.random([pixels_x,pixels_y])
+# grid = np.ones([pixels_x,pixels_y])
 
 #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
 plt.figure(figsize=(13,13))
 plt.imshow(grid)
 plt.title('Secondary electron escape factor grid')
+plt.colorbar()
 plt.show()
+print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
+print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
+print(f"Rotation = {rotation:.3f}")
 
 # Define the function which generates the Gauss kernel that is used in the convolution
 def shifted_gauss1d(gauss_pixels,sigma,shift):
@@ -126,18 +157,18 @@ picture_grid = np.zeros([pixels_x,pixels_y])
 expected_number_of_secondary_electrons = np.zeros([pixels_x,pixels_y])
 
 # Calculate the beam width given the beam current
-FWHM = 8e-9 # (in m)
+FWHM = c.d_p_func(beam_current) # (in m)
 sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
 sigma = sigma/pixel_width_x # (in px)
 half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
 
 # Plot the kernel
-# plt.figure()
-# plt.imshow(gauss_kernel(half_pixel_width_gaussian_kernel*2+1, sigma))
-# plt.title('Beam profile')
-# plt.xlabel('px')
-# plt.ylabel('px')
-# plt.show()
+plt.figure()
+plt.imshow(gauss_kernel(half_pixel_width_gaussian_kernel*2+1, sigma))
+plt.title('Beam profile')
+plt.xlabel('px')
+plt.ylabel('px')
+plt.show()
 
 # Calculate the expected number of secondary electrons for each pixel
 expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
@@ -159,6 +190,10 @@ for i in range(pixels_x):
 # Multiply by number of primary electrons per second (= beam current / e) and scan time
 e = 1.60217663e-19 # electron charge (in Coulomb)
 expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel
+# If there is no background noise, some numbers may become smaller than 0.
+# This gives an error in the upcoming Poisson function
+expected_number_of_secondary_electrons[expected_number_of_secondary_electrons<0] = 0
+
 
 # Simulate detected electrons using Poisson statistics
 picture_grid = np.random.poisson(expected_number_of_secondary_electrons)
@@ -170,6 +205,41 @@ plt.title('Simulated SEM image')
 plt.colorbar()
 plt.tight_layout()
 plt.show()
+
+# Try to denoise the Poisson noise:
+from skimage.restoration import denoise_nl_means, estimate_sigma
+
+# Transformations from Poisson noise to Gaussian noise and back
+def anscombe_transform(image):
+    return 2.0 * np.sqrt(image + 3.0 / 8.0)
+
+def inverse_anscombe_transform(transformed):
+    return (transformed / 2.0) ** 2 - 3.0 / 8.0
+
+transformed = anscombe_transform(picture_grid)
+sigma_est = estimate_sigma(transformed, channel_axis=None)
+
+denoised_transformed = denoise_nl_means(
+    transformed,
+    h=1.15 * sigma_est,
+    fast_mode=True,
+    patch_size=5,
+    patch_distance=6,
+    channel_axis=None)
+
+
+picture_grid_denoised = inverse_anscombe_transform(denoised_transformed)
+
+# Plotting the denoised
+plt.figure(figsize=(12,12))
+plt.imshow(picture_grid_denoised)
+plt.title('Simulated SEM image denoised')
+plt.colorbar()
+plt.tight_layout()
+plt.show()
+
+
+
 
 time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel
 print(f"Time to make image = {time_to_make_picture:.5f} seconds")
@@ -220,8 +290,8 @@ scan_time_per_image_array = np.array([0.1,0.11,0.11375,0.115,0.1175,0.1195,0.121
 scan_time_per_pixel_array = scan_time_per_image_array/(pixels_x*pixels_y)
 
 # Make the plot
-# plt.figure()
-# plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
-# plt.xlabel("Beam current (pA)")
-# plt.ylabel("Time per 1 µm² image (s)")
-# plt.show()
+plt.figure()
+plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
+plt.xlabel("Beam current (pA)")
+plt.ylabel("Time per 1 µm² image (s)")
+plt.show()

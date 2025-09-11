@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import rotate, shift
 import config as c
+from skimage.restoration import denoise_nl_means, estimate_sigma
 
 """
 The chip and all its features (like edges and alignment marks) are modeled using a grid. The grid 
@@ -21,29 +22,6 @@ factors. We then have the expected number of secondary electrons for each pixel.
 using a Poisson distribution where the expectation value for each pixel is the expected number of 
 secondary electrons emitted by that pixel.
 """
-
-# Beam current (in A)
-beam_current = 5e-13 # 570e-12 based on Zeiss specs sheet
-# Scan time per pixel (inverse of the scan rate)
-scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
-
-# Pixel size (in m)
-pixel_width_x = 2e-9 # (2e-9 is a guess based on the ASML metrology and inspection systems webpage)
-pixel_width_y = pixel_width_x
-
-# Frame width (in m)
-frame_width_x = 1e-6 # (1e-6 according to Koen)
-frame_width_y = frame_width_x
-
-# To model beam alignment error, the position of the center of the beam is normally distributed 
-# around the position of the targeted pixel, with standard deviation error_std (in m).
-error_std = 8e-9 # (8e-9 is a guess based on the breakdown of the sources of alignment error)
-
-# Create alignment mark (a cross of high SE escape factor (background +1 in the middle of the grid)
-# Dimensions in meter
-cross_length = 100e-9
-cross_line_width = 14e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
-
 def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_width_y=1e-6,cross_length=100e-9,cross_line_width=14e-9):
     # The number of pixels in the x and the y direction 
     pixels_x = int(np.rint(frame_width_x/pixel_width_x))
@@ -133,19 +111,6 @@ def measured_image(real_image,beam_current=500e-12,scan_time_per_pixel=4e-7,erro
     picture_grid = np.random.poisson(expected_number_of_secondary_electrons)
     return picture_grid
 
-
-grid, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
-
-#Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
-plt.figure(figsize=(13,13))
-plt.imshow(grid)
-plt.title('Secondary electron escape factor grid')
-plt.colorbar()
-plt.show()
-print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
-print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
-print(f"Rotation = {rotation:.3f}")
-
 # Define the function which generates the Gauss kernel that is used in the convolution
 def shifted_gauss1d(gauss_pixels,sigma,shift):
     x = np.arange(gauss_pixels)
@@ -191,13 +156,6 @@ def convolve_at_pixel(grid, kernel, i, j):
     # Elementwise multiply and sum
     return np.sum(patch * kernel_cropped)
 
-# Calculate the beam width given the beam current
-FWHM = c.d_p_func(beam_current) # (in m)
-sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
-sigma = sigma/pixel_width_x # (in px)
-half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
-
-
 def plot_kernel(half_pixel_width_gaussian_kernel,sigma,shift_x=0,shift_y=0):
     # Plot the kernel
     plt.figure()
@@ -207,21 +165,6 @@ def plot_kernel(half_pixel_width_gaussian_kernel,sigma,shift_x=0,shift_y=0):
     plt.ylabel('px')
     plt.show()
     return
-
-plot_kernel(half_pixel_width_gaussian_kernel,sigma)
-
-picture_grid = measured_image(grid, beam_current, scan_time_per_pixel, error_std)
-
-# Plotting
-plt.figure(figsize=(12,12))
-plt.imshow(picture_grid)
-plt.title('Simulated SEM image')
-plt.colorbar()
-plt.tight_layout()
-plt.show()
-
-# Try to denoise the Poisson noise:
-from skimage.restoration import denoise_nl_means, estimate_sigma
 
 # Transformations from Poisson noise to Gaussian noise and back
 def anscombe_transform(image):
@@ -245,24 +188,6 @@ def denoise_image(image):
 
     return denoised_image
 
-picture_grid_denoised = denoise_image(picture_grid)
-
-# Plotting the denoised
-plt.figure(figsize=(12,12))
-plt.imshow(picture_grid_denoised)
-plt.title('Simulated SEM image denoised')
-plt.colorbar()
-plt.tight_layout()
-plt.show()
-
-
-
-
-time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel
-print(f"Time to make image = {time_to_make_picture:.5f} seconds")
-print(f"Scan time per pixel = {scan_time_per_pixel*1e6:.5f} µs")
-print(f"Beam current = {beam_current*1e12} pA")
-print(f"Error std = {error_std*1e9:.3f} nm")
 
 
 def calculate_CNR(picture_grid,
@@ -298,26 +223,115 @@ def calculate_CNR(picture_grid,
     return CNR
 
 
-# CNR = calculate_CNR()
-# print(f"Contrast to noise ratio = {CNR}")
+if __name__ == "__main__":
 
-# Make a beam intensity vs time plot of the curve with CNR = 2
+    # Beam current (in A)
+    beam_current = 5e-13 # 570e-12 based on Zeiss specs sheet
+    # Scan time per pixel (inverse of the scan rate)
+    scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
+    
+    # Pixel size (in m)
+    pixel_width_x = 2e-9 # (2e-9 is a guess based on the ASML metrology and inspection systems webpage)
+    pixel_width_y = pixel_width_x
+    
+    # Frame width (in m)
+    frame_width_x = 1e-6 # (1e-6 according to Koen)
+    frame_width_y = frame_width_x
+    
+    # To model beam alignment error, the position of the center of the beam is normally distributed 
+    # around the position of the targeted pixel, with standard deviation error_std (in m).
+    error_std = 8e-9 # (8e-9 is a guess based on the breakdown of the sources of alignment error)
+    
+    # Create alignment mark (a cross of high SE escape factor (background +1 in the middle of the grid)
+    # Dimensions in meter
+    cross_length = 100e-9
+    cross_line_width = 14e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
+    
+    
+    
+    
+    grid, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
+    
+    #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
+    plt.figure(figsize=(13,13))
+    plt.imshow(grid)
+    plt.title('Secondary electron escape factor grid')
+    plt.colorbar()
+    plt.show()
+    print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
+    print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
+    print(f"Rotation = {rotation:.3f}")
 
-# Values of beam current (in pA)
-beam_current_array = np.array([3.1,3,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2,
-                               1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1,1.0,0.9,
-                               0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1])
-# Values of the time to make the image (in s)
-scan_time_per_image_array = np.array([0.1,0.11,0.11375,0.115,0.1175,0.1195,0.12125,
-                                      0.1225,0.1275,0.13,0.13375,0.1475,0.16375,
-                                      0.18,0.19250,0.19250,0.20000,0.19750,0.22500,
-                                      0.25250,0.27625,0.30125,0.32750,0.35375,0.39250,
-                                      0.50000,0.60000,0.77500,0.95000,1.50000,2.95000])
-scan_time_per_pixel_array = scan_time_per_image_array/(pixels_x*pixels_y)
 
-# Make the plot
-plt.figure()
-plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
-plt.xlabel("Beam current (pA)")
-plt.ylabel("Time per 1 µm² image (s)")
-plt.show()
+
+    # Calculate the beam width given the beam current
+    FWHM = c.d_p_func(beam_current) # (in m)
+    FWHM = 9e-9 # (in m)
+    sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
+    sigma = sigma/pixel_width_x # (in px)
+    half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
+
+
+    plot_kernel(half_pixel_width_gaussian_kernel,sigma)
+
+    picture_grid = measured_image(grid, beam_current, scan_time_per_pixel, error_std)
+
+    # Plotting
+    plt.figure(figsize=(12,12))
+    plt.imshow(picture_grid)
+    plt.title('Simulated SEM image')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+
+
+    picture_grid_denoised = denoise_image(picture_grid)
+    
+    # Plotting the denoised
+    plt.figure(figsize=(12,12))
+    plt.imshow(picture_grid_denoised)
+    plt.title('Simulated SEM image denoised')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.show()
+    
+    
+    
+    
+    time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel
+    print(f"Time to make image = {time_to_make_picture:.5f} seconds")
+    print(f"Scan time per pixel = {scan_time_per_pixel*1e6:.5f} µs")
+    print(f"Beam current = {beam_current*1e12} pA")
+    print(f"Error std = {error_std*1e9:.3f} nm")
+
+
+
+
+
+    # CNR = calculate_CNR()
+    # print(f"Contrast to noise ratio = {CNR}")
+    
+    # Make a beam intensity vs time plot of the curve with CNR = 2
+    
+    # Values of beam current (in pA)
+    beam_current_array = np.array([3.1,3,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2,
+                                   1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1,1.0,0.9,
+                                   0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1])
+    # Values of the time to make the image (in s)
+    scan_time_per_image_array = np.array([0.1,0.11,0.11375,0.115,0.1175,0.1195,0.12125,
+                                          0.1225,0.1275,0.13,0.13375,0.1475,0.16375,
+                                          0.18,0.19250,0.19250,0.20000,0.19750,0.22500,
+                                          0.25250,0.27625,0.30125,0.32750,0.35375,0.39250,
+                                          0.50000,0.60000,0.77500,0.95000,1.50000,2.95000])
+    scan_time_per_pixel_array = scan_time_per_image_array/(pixels_x*pixels_y)
+    
+    # Make the plot
+    plt.figure()
+    plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
+    plt.xlabel("Beam current (pA)")
+    plt.ylabel("Time per 1 µm² image (s)")
+    plt.show()

@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import rotate, shift
 from skimage.restoration import denoise_nl_means, estimate_sigma
+import cv2
 
 """
 The chip and all its features (like edges and alignment marks) are modeled using a grid. The grid 
@@ -116,7 +117,7 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
 
     # Simulate detected electrons using Poisson statistics
     picture_grid = np.random.poisson(expected_number_of_secondary_electrons)
-    return picture_grid
+    return picture_grid, half_pixel_width_gaussian_kernel, sigma
 
 # Define the function which generates the Gauss kernel that is used in the convolution
 def shifted_gauss1d(gauss_pixels,sigma,shift):
@@ -229,11 +230,82 @@ def calculate_CNR(picture_grid,
     CNR = np.abs(cross_average-background_average)/background_std
     return CNR
 
+def detect_and_plot_harris_corners(
+    denoised_grid, 
+    block_size=2, 
+    ksize=3, 
+    k=0.04, 
+    threshold_ratio=0.01, 
+    dot_radius=1, 
+    dot_alpha=0.5  # Transparency: 0 (invisible) to 1 (solid)
+):
+    """
+    Perform Harris Corner Detection on a grayscale image and plot it with transparent red dots on corners.
+
+    Parameters:
+        denoised_grid (np.ndarray): Grayscale input image as a 2D NumPy array.
+        block_size (int): Neighborhood size for corner detection.
+        ksize (int): Aperture parameter for the Sobel operator.
+        k (float): Harris detector free parameter.
+        threshold_ratio (float): Threshold relative to max corner response (between 0 and 1).
+        dot_radius (int): Radius of the red dots.
+        dot_alpha (float): Opacity of the red dots (0 = transparent, 1 = opaque).
+    """
+    denoised_grid = denoised_grid/np.max(denoised_grid)
+    threshold_value = np.percentile(denoised_grid, 99.7)
+
+    # Step 2: Apply thresholding
+    denoised_grid = (denoised_grid >= threshold_value).astype(np.uint8)
+    
+    # Step 1: Convert to float32 for Harris
+    gray = np.float32(denoised_grid)
+
+    # Step 2: Harris corner detection
+    dst = cv2.cornerHarris(gray, blockSize=block_size, ksize=ksize, k=k)
+    dst = cv2.dilate(dst, None)
+
+    # Step 3: Thresholding
+    threshold = threshold_ratio * dst.max()
+    corner_mask = dst > threshold
+
+    # Step 4: Scale image properly
+    if denoised_grid.max() <= 1.0:
+        display_img = (denoised_grid * 255).astype(np.uint8)
+    else:
+        display_img = denoised_grid.astype(np.uint8)
+
+    # Convert grayscale to color
+    base_img = cv2.cvtColor(display_img, cv2.COLOR_GRAY2BGR)
+
+    # Step 5: Create overlay for drawing transparent dots
+    overlay = base_img.copy()
+
+    y_coords, x_coords = np.where(corner_mask)
+    for x, y in zip(x_coords, y_coords):
+        cv2.circle(overlay, (x, y), radius=dot_radius, color=(0, 0, 255), thickness=-1)
+
+    # Step 6: Blend base image with overlay (transparent red dots)
+    blended = cv2.addWeighted(overlay, dot_alpha, base_img, 1 - dot_alpha, 0)
+
+    # Step 7: Display
+    plt.figure(figsize=(10, 10))
+    plt.imshow(cv2.cvtColor(blended, cv2.COLOR_BGR2RGB))
+    plt.title("Harris Corners with Transparent Red Dots")
+    plt.axis('off')
+    plt.show()
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
 
     # Beam current (in A)
-    beam_current = 5e-13 # 570e-12 based on Zeiss specs sheet
+    beam_current = 4e-13 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
     scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
     
@@ -257,7 +329,7 @@ if __name__ == "__main__":
     
     
     
-    grid, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
+    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
     
     #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
     plt.figure(figsize=(13,13))
@@ -272,11 +344,11 @@ if __name__ == "__main__":
 
 
 
+    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel, error_std)
 
 
     plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
-    picture_grid = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel, error_std)
 
     # Plotting
     plt.figure(figsize=(12,12))
@@ -337,3 +409,7 @@ if __name__ == "__main__":
     plt.xlabel("Beam current (pA)")
     plt.ylabel("Time per 1 µm² image (s)")
     plt.show()
+    
+    
+    
+    detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)

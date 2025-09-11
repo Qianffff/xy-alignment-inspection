@@ -268,11 +268,12 @@ if __name__ == "__main__":
     print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
     print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
     print(f"Rotation = {rotation:.3f}")
-
-
-
-
-
+    
+    # Calculate the beam width given the beam current
+    FWHM = 9e-9 # (in m)
+    sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
+    sigma = sigma/pixel_width_x # (in px)
+    half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
 
     plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 

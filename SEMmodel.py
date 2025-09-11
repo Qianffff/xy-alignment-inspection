@@ -171,7 +171,8 @@ def plot_kernel(half_pixel_width_gaussian_kernel,sigma,shift_x=0,shift_y=0):
     plt.title('Beam profile')
     plt.xlabel('px')
     plt.ylabel('px')
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.5)
     return
 
 # Transformations from Poisson noise to Gaussian noise and back
@@ -292,7 +293,8 @@ def detect_and_plot_harris_corners(
     plt.imshow(cv2.cvtColor(blended, cv2.COLOR_BGR2RGB))
     plt.title("Harris Corners with Transparent Red Dots")
     plt.axis('off')
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.5)
 
 
 
@@ -336,26 +338,22 @@ if __name__ == "__main__":
     plt.imshow(grid)
     plt.title('Secondary electron escape factor grid')
     plt.colorbar()
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.5)
+
     print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
     print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
     print(f"Rotation = {rotation:.3f}")
 
 
-    # Calculate the beam width given the beam current
-    FWHM = 9e-9 # (in m)
-    sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
-    sigma = sigma/pixel_width_x # (in px)
-    half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
-
+    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, 5e-13, 4e-7)
 
 
     plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
-    pixels_x = np.shape(real_image)[0]
-    pixels_y = np.shape(real_image)[0]
-    picture_grid = np.zeros((pixels_x, pixels_y))
-    expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
+
+
+
 
     # Plotting
     plt.figure(figsize=(12,12))
@@ -363,7 +361,8 @@ if __name__ == "__main__":
     plt.title('Simulated SEM image')
     plt.colorbar()
     plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.5)
 
 
 
@@ -378,7 +377,8 @@ if __name__ == "__main__":
     plt.title('Simulated SEM image denoised')
     plt.colorbar()
     plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.5)
     
     
     
@@ -415,7 +415,7 @@ if __name__ == "__main__":
     plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
     plt.xlabel("Beam current (pA)")
     plt.ylabel("Time per 1 µm² image (s)")
-    plt.show()
+    plt.show(block=False)
     
     
     

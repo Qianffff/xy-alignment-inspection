@@ -194,6 +194,8 @@ def denoise_image(image):
         patch_distance=6,
         channel_axis=None)
     denoised_image = inverse_anscombe_transform(denoised_transformed)
+    #normalize
+    denoised_image = np.clip(denoised_image, 0, 255).astype(np.uint8)
 
     return denoised_image
 
@@ -296,8 +298,51 @@ def detect_and_plot_harris_corners(
     plt.show(block=True)
 
 
+def cross_position(picture_grid_denoised, percentile):
+    # Calculate threshold value based on specified percentile
+    threshold_value = np.percentile(picture_grid_denoised, percentile)
+    print(f"Threshold value ({percentile} percentile): {threshold_value:.6f}")
+    
+    # Find coordinates where array values exceed the threshold
+    # np.where returns (y_coordinates, x_coordinates)
+    y_coords, x_coords = np.where(picture_grid_denoised > threshold_value)
+    
+    # Convert to list of (x, y) coordinate tuples
+    cross_points = list(zip(x_coords, y_coords))
+    
+    print(f"Found {len(cross_points)} points above threshold")
+
+    if len(cross_points) > 0:
+        points_array = np.array(cross_points)  # shape = (N, 2)
+        
+        center_x = np.mean(points_array[:, 0])
+        center_y = np.mean(points_array[:, 1])
+        
+        print(f"Center point: x = {center_x:.2f}, y = {center_y:.2f}")
+    else:
+        print("No points found above threshold.")
+    
+    return center_x, center_y, cross_points
 
 
+def cross_orientation_PCA(cross_points):
+    pts = np.array(cross_points, dtype=np.float32)
+
+    #OpenCV PCA
+    mean, eigenvectors = cv2.PCACompute(pts, mean=None)
+    vx, vy = eigenvectors[0]
+    angle = np.arctan2(vy, vx) * 180.0 / np.pi
+    return angle
+
+def cross_orientation_hough(binary_img):    
+    # Hough detection
+    lines = cv2.HoughLinesP(binary_img, 1, np.pi/180, threshold=30, minLineLength=20, maxLineGap=5)
+    angles = []
+    if lines is not None:
+        for rho, theta in lines[:,0]:
+            angle = theta * 180 / np.pi
+            angles.append(angle)
+    return angles
 
 
 
@@ -345,7 +390,7 @@ if __name__ == "__main__":
     print(f"Rotation = {rotation:.3f}")
 
 
-    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, 5e-13, 4e-7)
+    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
 
 
     plot_kernel(half_pixel_width_gaussian_kernel,sigma)
@@ -369,15 +414,42 @@ if __name__ == "__main__":
 
 
     picture_grid_denoised = denoise_image(picture_grid)
-    
+    centerx, centery, cross_points =cross_position(picture_grid_denoised,50)
+    angle_test = cross_orientation_PCA(cross_points)
+        # 归一化并二值化
+    img_uint8 = cv2.normalize(picture_grid_denoised, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    _, binary_img = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # 调用 Hough 方法
+    angle_test_h = cross_orientation_hough(binary_img)
+
+    print(angle_test_h)
+    print(angle_test)
+
+    # ===================== Plot grayscale histogram =====================
+    plt.figure(figsize=(8,5))
+    plt.hist(picture_grid_denoised.ravel(), bins=256, range=(0, 1), color='gray')
+    plt.title('Grayscale Histogram of Denoised SEM Image')
+    plt.xlabel('Pixel Intensity')
+    plt.ylabel('Frequency')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+    plt.pause(0.5)
+
     # Plotting the denoised
     plt.figure(figsize=(12,12))
     plt.imshow(picture_grid_denoised)
     plt.title('Simulated SEM image denoised')
     plt.colorbar()
+    plt.scatter(centerx, centery, c='red', marker='+', s=200, label='Center')
+    plt.legend()
     plt.tight_layout()
     plt.show(block=False)
     plt.pause(0.5)
+
+    
+
     
     
     

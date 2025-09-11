@@ -306,6 +306,7 @@ def detect_and_plot_harris_corners(
 def cross_position(picture_grid_denoised, percentile):
     # Calculate threshold value based on specified percentile
     threshold_value = np.percentile(picture_grid_denoised, percentile)
+    threshold_value=percentile/100*np.max(picture_grid_denoised)
     print(f"Threshold value ({percentile} percentile): {threshold_value:.6f}")
     
     # Find coordinates where array values exceed the threshold
@@ -359,8 +360,8 @@ def cross_orientation_hough(binary_img):
     lines = cv2.HoughLinesP(binary_img, 1, np.pi/180, threshold=30, minLineLength=20, maxLineGap=5)
     angles = []
     if lines is not None:
-        for rho, theta in lines[:,0]:
-            angle = theta * 180 / np.pi
+        for x1, y1, x2, y2 in lines[:, 0]:
+            angle = np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi
             angles.append(angle)
     return angles
 
@@ -434,17 +435,14 @@ if __name__ == "__main__":
 
 
     picture_grid_denoised = denoise_image(picture_grid)
-    centerx, centery, cross_points =cross_position(picture_grid_denoised,50)
+    intensity_threshold=50
+    centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
     angle_test = cross_orientation_PCA(cross_points)
-        # 归一化并二值化
     img_uint8 = cv2.normalize(picture_grid_denoised, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     _, binary_img = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    # 调用 Hough 方法
     angle_test_h = cross_orientation_hough(binary_img)
 
-    print(angle_test_h)
-    print(angle_test)
 
     # ===================== Plot grayscale histogram =====================
     plt.figure(figsize=(8,5))

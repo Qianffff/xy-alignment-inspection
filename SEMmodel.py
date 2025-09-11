@@ -22,7 +22,7 @@ factors. We then have the expected number of secondary electrons for each pixel.
 using a Poisson distribution where the expectation value for each pixel is the expected number of 
 secondary electrons emitted by that pixel.
 """
-def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_width_y=1e-6,cross_length=100e-9,cross_line_width=14e-9):
+def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_width_y=1e-6,cross_length=100e-9,cross_line_width=14e-9,shift_x=None,shift_y=None,rotation=None,background_noise=True):
     # The number of pixels in the x and the y direction 
     pixels_x = int(np.rint(frame_width_x/pixel_width_x))
     pixels_y = int(np.rint(frame_width_y/pixel_width_y))
@@ -45,9 +45,12 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # Random position and rotation cross
     max_shift_x = int(np.round(cross_pixel_left_side - 1/8*pixels_x))
     max_shift_y = int(np.round(cross_pixel_top_side - 1/8*pixels_y))
-    shift_x = int(np.random.randint(-max_shift_x,max_shift_x))
-    shift_y = int(np.random.randint(-max_shift_y,max_shift_y))
-    rotation = np.random.uniform(0,90)
+    if shift_x == None:
+        shift_x = int(np.random.randint(-max_shift_x,max_shift_x))
+    if shift_y == None:
+        shift_y = int(np.random.randint(-max_shift_y,max_shift_y))
+    if rotation == None:
+        rotation = np.random.uniform(0,90)
 
     # First: create the cross in the middle of the grid
     # Create the vertical line
@@ -73,7 +76,8 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
 
     # Fourth: add noise in background
     # Use the first to have some randomness, and the second for a constant escape factor
-    grid += np.random.random([pixels_x,pixels_y])
+    if background_noise == True:
+        grid += np.random.random([pixels_x,pixels_y])
     # grid = np.ones([pixels_x,pixels_y])
     return grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation
 
@@ -257,7 +261,7 @@ def detect_and_plot_harris_corners(
 
     # Step 2: Apply thresholding
     denoised_grid = (denoised_grid >= threshold_value).astype(np.uint8)
-    
+
     # Step 1: Convert to float32 for Harris
     gray = np.float32(denoised_grid)
 
@@ -295,8 +299,24 @@ def detect_and_plot_harris_corners(
     plt.axis('off')
     plt.show(block=True)
 
+    return denoised_grid
 
 
+def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9):
+    score = np.zeros(90)
+    for i in np.arange(0,90):
+        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=i,background_noise=False)[0]
+        # img_no_noise = img_no_noise/np.max(img_no_noise)
+        score[i] = np.mean((img-img_no_noise)**2)
+    best_i = np.argmin(score)
+    angles_refined = np.arange(best_i-2.5,best_i+2.5,0.01)
+    score_refined = np.zeros(np.shape(angles_refined))
+    for j,angle in enumerate(angles_refined):
+        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=angle,background_noise=False)[0]
+        # img_no_noise = img_no_noise/np.max(img_no_noise)
+        score_refined[j] = np.mean((img-img_no_noise)**2)
+    best_angle = angles_refined[np.argmin(score_refined)]
+    return best_angle
 
 
 
@@ -306,7 +326,7 @@ def detect_and_plot_harris_corners(
 if __name__ == "__main__":
 
     # Beam current (in A)
-    beam_current = 4e-13 # 570e-12 based on Zeiss specs sheet
+    beam_current = 5000e-13 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
     scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
     
@@ -324,13 +344,13 @@ if __name__ == "__main__":
     
     # Create alignment mark (a cross of high SE escape factor (background +1 in the middle of the grid)
     # Dimensions in meter
-    cross_length = 100e-9
+    cross_length = 300e-9
     cross_line_width = 14e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
     
     
     
     
-    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
+    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width,shift_x=0,shift_y=0)
     
     #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
     plt.figure(figsize=(13,13))
@@ -345,7 +365,7 @@ if __name__ == "__main__":
     print(f"Rotation = {rotation:.3f}")
 
 
-    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, 5e-13, 4e-7)
+    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
 
 
     plot_kernel(half_pixel_width_gaussian_kernel,sigma)
@@ -418,4 +438,8 @@ if __name__ == "__main__":
     
     
     
-    detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
+    black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
+   
+
+    found_rotation = find_rotation(black_white_grid,0,0,cross_length=cross_length,cross_width=cross_line_width)
+    print(f"Found rotation = {found_rotation}")

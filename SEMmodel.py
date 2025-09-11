@@ -342,13 +342,20 @@ if __name__ == "__main__":
     print(f"Rotation = {rotation:.3f}")
 
 
+    # Calculate the beam width given the beam current
+    FWHM = 9e-9 # (in m)
+    sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
+    sigma = sigma/pixel_width_x # (in px)
+    half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
 
-
-    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel, error_std)
 
 
     plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
+    pixels_x = np.shape(real_image)[0]
+    pixels_y = np.shape(real_image)[0]
+    picture_grid = np.zeros((pixels_x, pixels_y))
+    expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
 
     # Plotting
     plt.figure(figsize=(12,12))

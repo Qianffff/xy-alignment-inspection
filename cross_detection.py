@@ -24,6 +24,17 @@ _, thresh_img = cv2.threshold(picture_grid_denoised_uint8, 60, 70, cv2.THRESH_BI
 thresh_img_color = cv2.cvtColor(thresh_img, cv2.COLOR_GRAY2BGR)
 print("test4")
 # ===================== Show results =====================
+
+# ===================== Plot grayscale histogram =====================
+gray = cv2.cvtColor(picture_grid_denoised, cv2.COLOR_BGR2GRAY)
+plt.figure(figsize=(8,5))
+plt.hist(picture_grid_denoised.ravel(), bins=256, range=(0, 255), color='gray')
+plt.title('Grayscale Histogram of Denoised SEM Image')
+plt.xlabel('Pixel Intensity')
+plt.ylabel('Frequency')
+plt.grid(True)
+plt.show()
+
 # Plotting the denoised
 plt.figure(figsize=(12,12))
 plt.imshow(picture_grid_denoised)

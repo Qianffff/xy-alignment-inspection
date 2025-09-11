@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import scipy
 from scipy.signal.windows import gaussian
 from scipy.signal import convolve2d
-import config as c
 
 
 """
@@ -168,7 +167,7 @@ intensity_beam = intensity_beam_A/(elementary_charge) # number of electrons per 
 scan_time_per_pixel = 6e-7 # in seconds
 
 # The width of the Gaussian is related to the intensity (current) of the beam
-FWHM = c.d_p_func(intensity_beam_A)
+FWHM = 8e-9
 sigma = FWHM/(2*np.sqrt(2*np.log(2))) # in m
 sigma = sigma/pixel_width_x
 half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # in pixels

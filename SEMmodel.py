@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import rotate, shift
-import config as c
 from skimage.restoration import denoise_nl_means, estimate_sigma
 
 """
@@ -75,14 +74,22 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # Use the first to have some randomness, and the second for a constant escape factor
     grid += np.random.random([pixels_x,pixels_y])
     # grid = np.ones([pixels_x,pixels_y])
-    return grid, pixels_x, pixels_y, shift_x, shift_y, rotation
+    return grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation
 
-def measured_image(real_image,beam_current=500e-12,scan_time_per_pixel=4e-7,error_std=8e-9):
+def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,scan_time_per_pixel=4e-7,error_std=8e-9):
     # Calculate the expected number of SE per pixel
     pixels_x = np.shape(real_image)[0]
     pixels_y = np.shape(real_image)[0]
     picture_grid = np.zeros((pixels_x, pixels_y))
     expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
+    
+    # Calculate the beam width given the beam current
+    FWHM = 9e-9 # (in m)
+    sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
+    sigma = sigma/pixel_width_x # (in px)
+    half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
+    
+    
     
     for i in range(pixels_x):
         for j in range(pixels_y):
@@ -94,7 +101,7 @@ def measured_image(real_image,beam_current=500e-12,scan_time_per_pixel=4e-7,erro
                                      sigma,error_shift_x,error_shift_y)
             # Perform the convolution
             expected_number_of_secondary_electrons[i, j] = convolve_at_pixel(
-                grid, kernel_ij, i, j)
+                real_image, kernel_ij, i, j)
         # Progress bar
         if int(np.round(i/pixels_x*100000)) % 5000 == 0:
             print(str(int(np.round(i/pixels_x*100)))+str("%"),end=" ")
@@ -264,17 +271,12 @@ if __name__ == "__main__":
 
 
 
-    # Calculate the beam width given the beam current
-    FWHM = c.d_p_func(beam_current) # (in m)
-    FWHM = 9e-9 # (in m)
-    sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
-    sigma = sigma/pixel_width_x # (in px)
-    half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
+
 
 
     plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
-    picture_grid = measured_image(grid, beam_current, scan_time_per_pixel, error_std)
+    picture_grid = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel, error_std)
 
     # Plotting
     plt.figure(figsize=(12,12))

@@ -257,7 +257,7 @@ if __name__ == "__main__":
     
     
     
-    grid, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
+    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
     
     #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
     plt.figure(figsize=(13,13))

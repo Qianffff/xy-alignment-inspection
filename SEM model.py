@@ -39,63 +39,102 @@ frame_width_y = frame_width_x
 # around the position of the targeted pixel, with standard deviation error_std (in m).
 error_std = 8e-9 # (8e-9 is a guess based on the breakdown of the sources of alignment error)
 
-# The number of pixels in the x and the y direction 
-pixels_x = int(np.rint(frame_width_x/pixel_width_x))
-pixels_y = int(np.rint(frame_width_y/pixel_width_y))
-
-# Grid of secondary electron (SE) escape factors
-grid = np.zeros([pixels_x,pixels_y])
-
 # Create alignment mark (a cross of high SE escape factor (background +1 in the middle of the grid)
 # Dimensions in meter
 cross_length = 100e-9
 cross_line_width = 14e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
 
-# Dimensions in pixels
-cross_pixel_length = int(np.round(cross_length/pixel_width_x))
-cross_pixel_width = int(np.round(cross_line_width/pixel_width_x))
+def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_width_y=1e-6,cross_length=100e-9,cross_line_width=14e-9):
+    # The number of pixels in the x and the y direction 
+    pixels_x = int(np.rint(frame_width_x/pixel_width_x))
+    pixels_y = int(np.rint(frame_width_y/pixel_width_y))
+    
+    # Grid of secondary electron (SE) escape factors
+    grid = np.zeros([pixels_x,pixels_y])
+    
+    # Dimensions in pixels
+    cross_pixel_length = int(np.round(cross_length/pixel_width_x))
+    cross_pixel_width = int(np.round(cross_line_width/pixel_width_x))
 
-# Define some useful parameters about the cross geometry
-cross_pixel_left_side = int(np.round(pixels_x/2 - cross_pixel_length/2))
-cross_pixel_right_side = cross_pixel_left_side + cross_pixel_length
-cross_pixel_top_side = cross_pixel_left_side
-cross_pixel_bottom_side = cross_pixel_right_side
-cross_pixel_half_width_plus = int(np.round(pixels_x/2+cross_pixel_width/2))
-cross_pixel_half_width_minus = int(np.round(pixels_x/2-cross_pixel_width/2))
+    # Define some useful parameters about the cross geometry
+    cross_pixel_left_side = int(np.round(pixels_x/2 - cross_pixel_length/2))
+    cross_pixel_right_side = cross_pixel_left_side + cross_pixel_length
+    cross_pixel_top_side = cross_pixel_left_side
+    cross_pixel_bottom_side = cross_pixel_right_side
+    cross_pixel_half_width_plus = int(np.round(pixels_x/2+cross_pixel_width/2))
+    cross_pixel_half_width_minus = int(np.round(pixels_x/2-cross_pixel_width/2))
 
-# Random position and rotation cross
-max_shift_x = int(np.round(cross_pixel_left_side - 1/8*pixels_x))
-max_shift_y = int(np.round(cross_pixel_top_side - 1/8*pixels_y))
-shift_x = int(np.random.randint(-max_shift_x,max_shift_x))
-shift_y = int(np.random.randint(-max_shift_y,max_shift_y))
-rotation = np.random.uniform(0,90)
+    # Random position and rotation cross
+    max_shift_x = int(np.round(cross_pixel_left_side - 1/8*pixels_x))
+    max_shift_y = int(np.round(cross_pixel_top_side - 1/8*pixels_y))
+    shift_x = int(np.random.randint(-max_shift_x,max_shift_x))
+    shift_y = int(np.random.randint(-max_shift_y,max_shift_y))
+    rotation = np.random.uniform(0,90)
 
-# First: create the cross in the middle of the grid
-# Create the vertical line
-grid[cross_pixel_top_side:cross_pixel_bottom_side,
-     cross_pixel_half_width_minus:cross_pixel_half_width_plus] += 1
-# Create the horizontal line
-grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
-     cross_pixel_left_side:cross_pixel_right_side] += 1
-# Remove doubly counted region
-grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
-     cross_pixel_half_width_minus:cross_pixel_half_width_plus] -= 1
+    # First: create the cross in the middle of the grid
+    # Create the vertical line
+    grid[cross_pixel_top_side:cross_pixel_bottom_side,
+         cross_pixel_half_width_minus:cross_pixel_half_width_plus] += 1
+    # Create the horizontal line
+    grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
+         cross_pixel_left_side:cross_pixel_right_side] += 1
+    # Remove doubly counted region
+    grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
+         cross_pixel_half_width_minus:cross_pixel_half_width_plus] -= 1
 
-# Second: rotate the cross
-grid = rotate(grid, angle=rotation, reshape=False, order=3, mode='constant', cval=0)
-# The rotate function may return numbers smaller than zero. This will become problematic
-# later on when using the Poisson distribution. Therefore we now set all negative numbers
-# (which are very small like -6e-144) to zero. This is justified because they are already
-# very small and since we can not have a negative number of secondary electrons
-grid[grid < 0] = 0
+    # Second: rotate the cross
+    grid = rotate(grid, angle=rotation, reshape=False, order=3, mode='constant', cval=0)
+    # The rotate function may return numbers smaller than zero. This will become problematic
+    # later on when using the Poisson distribution. Therefore we now set all negative numbers
+    # (which are very small like -6e-144) to zero. This is justified because they are already
+    # very small and since we can not have a negative number of secondary electrons
+    grid[grid < 0] = 0
 
-# Third: shift the rotated cross
-grid = shift(grid, shift=(shift_y, shift_x), order=3, mode='constant', cval=0)
+    # Third: shift the rotated cross
+    grid = shift(grid, shift=(shift_y, shift_x), order=3, mode='constant', cval=0)
 
-# Fourth: add noise in background
-# Use the first to have some randomness, and the second for a constant escape factor
-grid += np.random.random([pixels_x,pixels_y])
-# grid = np.ones([pixels_x,pixels_y])
+    # Fourth: add noise in background
+    # Use the first to have some randomness, and the second for a constant escape factor
+    grid += np.random.random([pixels_x,pixels_y])
+    # grid = np.ones([pixels_x,pixels_y])
+    return grid, pixels_x, pixels_y, shift_x, shift_y, rotation
+
+def measured_image(real_image,beam_current=500e-12,scan_time_per_pixel=4e-7,error_std=8e-9):
+    # Calculate the expected number of SE per pixel
+    pixels_x = np.shape(real_image)[0]
+    pixels_y = np.shape(real_image)[0]
+    picture_grid = np.zeros((pixels_x, pixels_y))
+    expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
+    
+    for i in range(pixels_x):
+        for j in range(pixels_y):
+            # Random beam position error in x and y direction (in pixels)
+            error_shift_x = np.random.normal(scale=error_std) / pixel_width_x
+            error_shift_y = np.random.normal(scale=error_std) / pixel_width_y
+            # Create kernel
+            kernel_ij = gauss_kernel(2*half_pixel_width_gaussian_kernel+1,
+                                     sigma,error_shift_x,error_shift_y)
+            # Perform the convolution
+            expected_number_of_secondary_electrons[i, j] = convolve_at_pixel(
+                grid, kernel_ij, i, j)
+        # Progress bar
+        if int(np.round(i/pixels_x*100000)) % 5000 == 0:
+            print(str(int(np.round(i/pixels_x*100)))+str("%"),end=" ")
+
+    # Multiply by number of primary electrons per second (= beam current / e) and scan time
+    e = 1.60217663e-19 # electron charge (in Coulomb)
+    expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel
+    # If there is no background noise, some numbers may become smaller than 0.
+    # This gives an error in the upcoming Poisson function
+    expected_number_of_secondary_electrons[expected_number_of_secondary_electrons<0] = 0
+
+
+    # Simulate detected electrons using Poisson statistics
+    picture_grid = np.random.poisson(expected_number_of_secondary_electrons)
+    return picture_grid
+
+
+grid, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
 
 #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
 plt.figure(figsize=(13,13))
@@ -151,10 +190,6 @@ def convolve_at_pixel(grid, kernel, i, j):
 
     # Elementwise multiply and sum
     return np.sum(patch * kernel_cropped)
-    
-# Calculate the expected number of SE per pixel
-picture_grid = np.zeros([pixels_x,pixels_y])
-expected_number_of_secondary_electrons = np.zeros([pixels_x,pixels_y])
 
 # Calculate the beam width given the beam current
 FWHM = c.d_p_func(beam_current) # (in m)
@@ -162,41 +197,20 @@ sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
 sigma = sigma/pixel_width_x # (in px)
 half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
 
-# Plot the kernel
-plt.figure()
-plt.imshow(gauss_kernel(half_pixel_width_gaussian_kernel*2+1, sigma))
-plt.title('Beam profile')
-plt.xlabel('px')
-plt.ylabel('px')
-plt.show()
 
-# Calculate the expected number of secondary electrons for each pixel
-expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
-for i in range(pixels_x):
-    for j in range(pixels_y):
-        # Random beam position error in x and y direction (in pixels)
-        error_shift_x = np.random.normal(scale=error_std) / pixel_width_x
-        error_shift_y = np.random.normal(scale=error_std) / pixel_width_y
-        # Create kernel
-        kernel_ij = gauss_kernel(2*half_pixel_width_gaussian_kernel+1,
-                                 sigma,error_shift_x,error_shift_y)
-        # Perform the convolution
-        expected_number_of_secondary_electrons[i, j] = convolve_at_pixel(
-            grid, kernel_ij, i, j)
-    # Progress bar
-    if int(np.round(i/pixels_x*100000)) % 5000 == 0:
-        print(str(int(np.round(i/pixels_x*100)))+str("%"),end=" ")
+def plot_kernel(half_pixel_width_gaussian_kernel,sigma,shift_x=0,shift_y=0):
+    # Plot the kernel
+    plt.figure()
+    plt.imshow(gauss_kernel(half_pixel_width_gaussian_kernel*2+1, sigma,shift_x,shift_y))
+    plt.title('Beam profile')
+    plt.xlabel('px')
+    plt.ylabel('px')
+    plt.show()
+    return
 
-# Multiply by number of primary electrons per second (= beam current / e) and scan time
-e = 1.60217663e-19 # electron charge (in Coulomb)
-expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel
-# If there is no background noise, some numbers may become smaller than 0.
-# This gives an error in the upcoming Poisson function
-expected_number_of_secondary_electrons[expected_number_of_secondary_electrons<0] = 0
+plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
-
-# Simulate detected electrons using Poisson statistics
-picture_grid = np.random.poisson(expected_number_of_secondary_electrons)
+picture_grid = measured_image(grid, beam_current, scan_time_per_pixel, error_std)
 
 # Plotting
 plt.figure(figsize=(12,12))
@@ -216,19 +230,22 @@ def anscombe_transform(image):
 def inverse_anscombe_transform(transformed):
     return (transformed / 2.0) ** 2 - 3.0 / 8.0
 
-transformed = anscombe_transform(picture_grid)
-sigma_est = estimate_sigma(transformed, channel_axis=None)
+def denoise_image(image):
+    transformed = anscombe_transform(image)
+    sigma_est = estimate_sigma(transformed, channel_axis=None)
 
-denoised_transformed = denoise_nl_means(
-    transformed,
-    h=1.15 * sigma_est,
-    fast_mode=True,
-    patch_size=5,
-    patch_distance=6,
-    channel_axis=None)
+    denoised_transformed = denoise_nl_means(
+        transformed,
+        h=1.15 * sigma_est,
+        fast_mode=True,
+        patch_size=5,
+        patch_distance=6,
+        channel_axis=None)
+    denoised_image = inverse_anscombe_transform(denoised_transformed)
 
+    return denoised_image
 
-picture_grid_denoised = inverse_anscombe_transform(denoised_transformed)
+picture_grid_denoised = denoise_image(picture_grid)
 
 # Plotting the denoised
 plt.figure(figsize=(12,12))
@@ -247,33 +264,42 @@ print(f"Scan time per pixel = {scan_time_per_pixel*1e6:.5f} µs")
 print(f"Beam current = {beam_current*1e12} pA")
 print(f"Error std = {error_std*1e9:.3f} nm")
 
-# Calculate contrast to noise ratio (CNR)
 
-cross_sum = 0 # Sum of secondary electron escape factors of all pixels in the cross
-cross_pixels = 0 # Number of pixels in the cross
-# Sum up the verticle line
-cross_sum += np.sum(picture_grid[cross_pixel_left_side:cross_pixel_right_side,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
-cross_pixels += np.size(picture_grid[cross_pixel_left_side:cross_pixel_right_side,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
-# Sum up the horizontal line
-cross_sum += np.sum(picture_grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_top_side:cross_pixel_bottom_side]) 
-cross_pixels += np.size(picture_grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_top_side:cross_pixel_bottom_side])
-# Remove doubly counted region
-cross_sum -= np.sum(picture_grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
-cross_pixels -= np.size(picture_grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
-# Calculate average
-cross_average = cross_sum/cross_pixels
+def calculate_CNR(picture_grid,
+                  cross_pixel_left_side,cross_pixel_right_side,
+                  cross_pixel_top_side,cross_pixel_bottom_side,
+                  cross_pixel_half_width_plus,cross_pixel_half_width_minus):
+    # Calculate contrast to noise ratio (CNR)
 
-# Calculate background std, number of pixels, and average secondary electron escape factor
-background_left, background_right, background_top, background_bottom = int(pixels_y*1/20), int(pixels_y*8/20), int(pixels_x*1/20), int(pixels_x*8/20)
-background_grid = picture_grid[background_left:background_right, background_top:background_bottom]
-background_sum = np.sum(background_grid)
-background_pixels = np.size(background_grid)
-background_std = np.std(background_grid)
-background_average = background_sum/background_pixels
+    cross_sum = 0 # Sum of secondary electron escape factors of all pixels in the cross
+    cross_pixels = 0 # Number of pixels in the cross
+    # Sum up the verticle line
+    cross_sum += np.sum(picture_grid[cross_pixel_left_side:cross_pixel_right_side,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
+    cross_pixels += np.size(picture_grid[cross_pixel_left_side:cross_pixel_right_side,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
+    # Sum up the horizontal line
+    cross_sum += np.sum(picture_grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_top_side:cross_pixel_bottom_side]) 
+    cross_pixels += np.size(picture_grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_top_side:cross_pixel_bottom_side])
+    # Remove doubly counted region
+    cross_sum -= np.sum(picture_grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
+    cross_pixels -= np.size(picture_grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
+    # Calculate average
+    cross_average = cross_sum/cross_pixels
 
-# Calculate CNR
-CNR = np.abs(cross_average-background_average)/background_std
-print(f"Contrast to noise ratio = {CNR}")
+    # Calculate background std, number of pixels, and average secondary electron escape factor
+    background_left, background_right, background_top, background_bottom = int(pixels_y*1/20), int(pixels_y*8/20), int(pixels_x*1/20), int(pixels_x*8/20)
+    background_grid = picture_grid[background_left:background_right, background_top:background_bottom]
+    background_sum = np.sum(background_grid)
+    background_pixels = np.size(background_grid)
+    background_std = np.std(background_grid)
+    background_average = background_sum/background_pixels
+
+    # Calculate CNR
+    CNR = np.abs(cross_average-background_average)/background_std
+    return CNR
+
+
+# CNR = calculate_CNR()
+# print(f"Contrast to noise ratio = {CNR}")
 
 # Make a beam intensity vs time plot of the curve with CNR = 2
 

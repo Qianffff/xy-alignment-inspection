@@ -385,7 +385,7 @@ if __name__ == "__main__":
     
     show_plots = True
     rotation_find_boolean = False
-# ===================== Process image =====================
+    
     # Generate wafer image
     grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
     print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
@@ -395,13 +395,12 @@ if __name__ == "__main__":
     # Use Gaussian distribution to meassure image
     picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
 
-
-    
+    # Denoise the image
     picture_grid_denoised = denoise_image(picture_grid)
     intensity_threshold=99.7
+
+    # Position of the cross
     centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
-    img_uint8 = cv2.normalize(picture_grid_denoised, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-    _, binary_img = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     # Listing some values of variables used in the simulation
     time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel
@@ -468,9 +467,9 @@ if __name__ == "__main__":
         plt.show(block=False)
         plt.pause(0.5)
 
-    # Plotting the I vs t
-    plt.figure()
-    plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
-    plt.xlabel("Beam current (pA)")
-    plt.ylabel("Time per 1 µm² image (s)")
-    plt.show(block=True)
+        # Plotting the I vs t
+        plt.figure()
+        plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
+        plt.xlabel("Beam current (pA)")
+        plt.ylabel("Time per 1 µm² image (s)")
+        plt.show(block=True)

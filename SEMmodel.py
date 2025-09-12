@@ -27,7 +27,7 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     pixels_x = int(np.rint(frame_width_x/pixel_width_x))
     pixels_y = int(np.rint(frame_width_y/pixel_width_y))
     
-    # Grid of secondary electron (SE) escape factors
+    # Grid of secondary electron (SE) yields
     grid = np.zeros([pixels_x,pixels_y])
     
     # Dimensions in pixels
@@ -83,7 +83,7 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     grid = shift(grid, shift=(shift_y, shift_x), order=3, mode='constant', cval=0)
 
     # Fourth: add noise in background
-    # Use the first to have some randomness, and the second for a constant escape factor
+    # Use the first to have some randomness, and the second for a constant yield
     if background_noise == True:
         grid += np.random.random([pixels_x,pixels_y])*0.5
     # grid = np.ones([pixels_x,pixels_y])
@@ -216,7 +216,7 @@ def calculate_CNR(picture_grid,
                   cross_pixel_half_width_plus,cross_pixel_half_width_minus):
     # Calculate contrast to noise ratio (CNR)
 
-    cross_sum = 0 # Sum of secondary electron escape factors of all pixels in the cross
+    cross_sum = 0 # Sum of secondary electron yields of all pixels in the cross
     cross_pixels = 0 # Number of pixels in the cross
     # Sum up the verticle line
     cross_sum += np.sum(picture_grid[cross_pixel_left_side:cross_pixel_right_side,cross_pixel_half_width_minus:cross_pixel_half_width_plus])
@@ -230,7 +230,7 @@ def calculate_CNR(picture_grid,
     # Calculate average
     cross_average = cross_sum/cross_pixels
 
-    # Calculate background std, number of pixels, and average secondary electron escape factor
+    # Calculate background std, number of pixels, and average secondary electron yield
     background_left, background_right, background_top, background_bottom = int(pixels_y*1/20), int(pixels_y*8/20), int(pixels_x*1/20), int(pixels_x*8/20)
     background_grid = picture_grid[background_left:background_right, background_top:background_bottom]
     background_sum = np.sum(background_grid)
@@ -362,9 +362,9 @@ if __name__ == "__main__":
 
 # ===================== Parameters =====================
     # Beam current (in A)
-    beam_current = 4e-9 # 570e-12 based on Zeiss specs sheet
+    beam_current = 0.5e-9 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
-    scan_time_per_pixel = 0.005e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
+    scan_time_per_pixel = 0.32e-6 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
     
     # Pixel size (in m)
     pixel_width_x = 1e-9 # (2e-9 is a guess based on the ASML metrology and inspection systems webpage)
@@ -378,7 +378,7 @@ if __name__ == "__main__":
     # around the position of the targeted pixel, with standard deviation error_std (in m).
     error_std = 8e-9 # (8e-9 is a guess based on the breakdown of the sources of alignment error)
     
-    # Create alignment mark (a cross of high SE escape factor (background +1 in the middle of the grid)
+    # Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
     # Dimensions in meter
     cross_length = 200e-9
     cross_line_width = 28e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
@@ -398,7 +398,7 @@ if __name__ == "__main__":
 
     
     picture_grid_denoised = denoise_image(picture_grid)
-    intensity_threshold=99.7
+    intensity_threshold=99.5
     centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
     img_uint8 = cv2.normalize(picture_grid_denoised, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     _, binary_img = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -437,10 +437,10 @@ if __name__ == "__main__":
     
 # ===================== Plot =====================
     if show_plots == True:
-        #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
-        plt.figure(figsize=(13,13))
+        #Plot the grid of SE yields. This represents what the real wafer pattern looks like.
+        plt.figure(figsize=(12,12))
         plt.imshow(grid)
-        plt.title('Secondary electron escape factor grid')
+        plt.title('Secondary electron yield grid')
         plt.colorbar()
         plt.show(block=False)
         plt.pause(0.5)

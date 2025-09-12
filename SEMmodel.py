@@ -56,12 +56,20 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # Create the vertical line
     grid[cross_pixel_top_side:cross_pixel_bottom_side,
          cross_pixel_half_width_minus:cross_pixel_half_width_plus] += 1
+    grid[cross_pixel_top_side+1:cross_pixel_bottom_side-1,
+         cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1] -= 0.5
     # Create the horizontal line
     grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
          cross_pixel_left_side:cross_pixel_right_side] += 1
+    grid[cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1,
+         cross_pixel_left_side+1:cross_pixel_right_side-1] -= 0.5
     # Remove doubly counted region
     grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
          cross_pixel_half_width_minus:cross_pixel_half_width_plus] -= 1
+    grid[cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1,
+         cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1] += 0.5
+
+
 
     # Second: rotate the cross
     grid = rotate(grid, angle=rotation, reshape=False, order=3, mode='constant', cval=0)
@@ -77,7 +85,7 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # Fourth: add noise in background
     # Use the first to have some randomness, and the second for a constant escape factor
     if background_noise == True:
-        grid += np.random.random([pixels_x,pixels_y])
+        grid += np.random.random([pixels_x,pixels_y])*0.5
     # grid = np.ones([pixels_x,pixels_y])
     return grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation
 
@@ -354,12 +362,12 @@ if __name__ == "__main__":
 
 # ===================== Parameters =====================
     # Beam current (in A)
-    beam_current = 0.5e-12 # 570e-12 based on Zeiss specs sheet
+    beam_current = 4e-9 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
-    scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
+    scan_time_per_pixel = 0.2e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
     
     # Pixel size (in m)
-    pixel_width_x = 2e-9 # (2e-9 is a guess based on the ASML metrology and inspection systems webpage)
+    pixel_width_x = 1e-9 # (2e-9 is a guess based on the ASML metrology and inspection systems webpage)
     pixel_width_y = pixel_width_x
     
     # Frame width (in m)
@@ -375,10 +383,11 @@ if __name__ == "__main__":
     cross_length = 200e-9
     cross_line_width = 28e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
     
-    show_plots = False
+    show_plots = True
+    rotation_find_boolean = False
 # ===================== Process image =====================
     # Generate wafer image
-    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width,shift_x=0,shift_y=0)  
+    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
     print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
     print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
     print(f"Rotation = {rotation:.3f}")
@@ -421,9 +430,10 @@ if __name__ == "__main__":
 
     # Angle of the cross
     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
-    found_rotation = find_rotation(black_white_grid,shift_x,shift_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
-    print(f"Found rotation = {found_rotation}")
-    print(f"Angle error = {found_rotation-rotation:.2f}")
+    if rotation_find_boolean == True:
+        found_rotation = find_rotation(black_white_grid,shift_x,shift_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
+        print(f"Found rotation = {found_rotation}")
+        print(f"Angle error = {found_rotation-rotation:.2f}")
     
 # ===================== Plot =====================
     if show_plots == True:

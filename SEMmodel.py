@@ -385,7 +385,51 @@ if __name__ == "__main__":
     
     show_plots = True
     rotation_find_boolean = False
-    
+
+    simulation_runs=20
+# ===================== Process image =====================
+
+    # Histogram of errors in detected positions
+    displacements = []
+
+    for _ in range(simulation_runs):            
+        # Generate wafer image
+        grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
+        print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
+        print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
+
+        # Use Gaussian distribution to meassure image
+        picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
+
+        # Denoise the image
+        picture_grid_denoised = denoise_image(picture_grid)
+        intensity_threshold=99.7
+
+        # Position of the cross
+        centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
+
+        # Listing some values of variables used in the simulation
+        time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel   
+        # Compute displacement (Euclidean distance in pixels)
+        dx = (centerx - int(np.round(pixels_x/2+shift_x))) * pixel_width_x * 1e9  # nm
+        dy = (centery - int(np.round(pixels_y/2+shift_y))) * pixel_width_y * 1e9  # nm
+        displacement = np.sqrt(dx**2 + dy**2)
+
+        displacements.append(displacement)
+
+    displacements = np.array(displacements)
+    #plotting of histogram
+    plt.figure(figsize=(8,6))
+    plt.hist(displacements, bins=20, color='skyblue', edgecolor='k')
+    plt.xlabel("Center shift (nm)")
+    plt.ylabel("Counts")
+    plt.title(f"Distribution of cross center shift\nBeam current = {beam_current*1e12:.1f} pA, runs = {simulation_runs}, time to make pictures = {time_to_make_picture}")
+    plt.show()     
+
+
+
+
+
     # Generate wafer image
     grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
     print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")

@@ -365,7 +365,7 @@ if __name__ == "__main__":
     pixel_width_y = pixel_width_x
     
     # Frame width (in m)
-    frame_width_x = 0.5e-6 # (1e-6 according to Koen)
+    frame_width_x = 1e-6 # (1e-6 according to Koen)
     frame_width_y = frame_width_x
     
     # To model beam alignment error, the position of the center of the beam is normally distributed 
@@ -374,9 +374,9 @@ if __name__ == "__main__":
     
     # Create alignment mark (a cross of high SE escape factor (background +1 in the middle of the grid)
     # Dimensions in meter
-    cross_length = 300e-9
-    cross_line_width = 14e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
-       
+    cross_length = 200e-9
+    cross_line_width = 28e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
+    
     
     # ===================== Process image =====================
     # Generate wafer image
@@ -388,7 +388,27 @@ if __name__ == "__main__":
     # Use Gaussian distribution to meassure image
     picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
 
-    # Denoise image
+
+    plot_kernel(half_pixel_width_gaussian_kernel,sigma)
+
+
+
+
+
+    # Plotting
+    plt.figure(figsize=(12,12))
+    plt.imshow(picture_grid)
+    plt.title('Simulated SEM image')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.show(block=False)
+    plt.pause(0.5)
+
+
+
+
+
+
     picture_grid_denoised = denoise_image(picture_grid)
     intensity_threshold=50
 

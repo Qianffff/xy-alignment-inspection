@@ -386,34 +386,12 @@ if __name__ == "__main__":
     picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
 
 
-    # Plotting picture_grid
-    plt.figure(figsize=(12,12))
-    plt.imshow(picture_grid)
-    plt.title('Simulated SEM image')
-    plt.colorbar()
-    plt.tight_layout()
-    plt.show(block=False)
-    plt.pause(0.5)
-
     
     picture_grid_denoised = denoise_image(picture_grid)
     intensity_threshold=50
     centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
     img_uint8 = cv2.normalize(picture_grid_denoised, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     _, binary_img = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-
-
-    # ===================== Plot grayscale histogram =====================
-    plt.figure(figsize=(8,5))
-    plt.hist(picture_grid_denoised.ravel(), bins=256, range=(0, 1), color='gray')
-    plt.title('Grayscale Histogram of Denoised SEM Image')
-    plt.xlabel('Pixel Intensity')
-    plt.ylabel('Frequency')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show(block=False)
-    plt.pause(0.5)
 
     # Plotting the denoised image
     plt.figure(figsize=(12,12))

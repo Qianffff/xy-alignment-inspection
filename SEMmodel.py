@@ -461,4 +461,4 @@ if __name__ == "__main__":
     plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
     plt.xlabel("Beam current (pA)")
     plt.ylabel("Time per 1 µm² image (s)")
-    plt.show(block=False)
+    plt.show(block=True)

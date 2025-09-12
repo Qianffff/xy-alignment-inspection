@@ -198,9 +198,6 @@ def denoise_image(image):
         patch_distance=6,
         channel_axis=None)
     denoised_image = inverse_anscombe_transform(denoised_transformed)
-    #normalize
-    denoised_image = np.clip(denoised_image, 0, 255).astype(np.uint8)
-
     return denoised_image
 
 
@@ -355,7 +352,7 @@ def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width_x=
 if __name__ == "__main__":
 
     # Beam current (in A)
-    beam_current = 5e-13 # 570e-12 based on Zeiss specs sheet
+    beam_current = 500e-12 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
     scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
     
@@ -397,7 +394,7 @@ if __name__ == "__main__":
     picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
 
 
-    # Plotting
+    # Plotting picture_grid
     plt.figure(figsize=(12,12))
     plt.imshow(picture_grid)
     plt.title('Simulated SEM image')
@@ -406,11 +403,7 @@ if __name__ == "__main__":
     plt.show(block=False)
     plt.pause(0.5)
 
-
-
-
-
-
+    
     picture_grid_denoised = denoise_image(picture_grid)
     intensity_threshold=50
     centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
@@ -427,7 +420,7 @@ if __name__ == "__main__":
     plt.ylabel('Frequency')
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
     plt.pause(0.5)
 
     # Plotting the denoised image

@@ -292,12 +292,13 @@ def detect_and_plot_harris_corners(
     blended = cv2.addWeighted(overlay, dot_alpha, base_img, 1 - dot_alpha, 0)
 
     # Step 7: Display
-    plt.figure(figsize=(10, 10))
-    plt.imshow(cv2.cvtColor(blended, cv2.COLOR_BGR2RGB))
-    plt.title("Harris Corners with Transparent Red Dots")
-    plt.axis('off')
-    plt.show(block=False)
-    plt.pause(0.1)
+    if show_plots == True:
+        plt.figure(figsize=(10, 10))
+        plt.imshow(cv2.cvtColor(blended, cv2.COLOR_BGR2RGB))
+        plt.title("Harris Corners with Transparent Red Dots")
+        plt.axis('off')
+        plt.show(block=False)
+        plt.pause(0.1)
     return denoised_grid
 
 def cross_position(picture_grid_denoised, percentile):
@@ -353,7 +354,7 @@ if __name__ == "__main__":
 
 # ===================== Parameters =====================
     # Beam current (in A)
-    beam_current = 500e-12 # 570e-12 based on Zeiss specs sheet
+    beam_current = 0.5e-12 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
     scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
     
@@ -374,7 +375,7 @@ if __name__ == "__main__":
     cross_length = 200e-9
     cross_line_width = 28e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
     
-    
+    show_plots = False
 # ===================== Process image =====================
     # Generate wafer image
     grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width,shift_x=0,shift_y=0)  
@@ -425,40 +426,41 @@ if __name__ == "__main__":
     print(f"Angle error = {found_rotation-rotation:.2f}")
     
 # ===================== Plot =====================
-    #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
-    plt.figure(figsize=(13,13))
-    plt.imshow(grid)
-    plt.title('Secondary electron escape factor grid')
-    plt.colorbar()
-    plt.show(block=False)
-    plt.pause(0.5)
+    if show_plots == True:
+        #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
+        plt.figure(figsize=(13,13))
+        plt.imshow(grid)
+        plt.title('Secondary electron escape factor grid')
+        plt.colorbar()
+        plt.show(block=False)
+        plt.pause(0.5)
 
-    #Plot the Gaussian kernel
-    plot_kernel(half_pixel_width_gaussian_kernel,sigma)
+        #Plot the Gaussian kernel
+        plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
-    # Plotting of the meassured SEM image
-    plt.figure(figsize=(12,12))
-    plt.imshow(picture_grid)
-    plt.title('Simulated SEM image')
-    plt.colorbar()
-    plt.tight_layout()
-    plt.show(block=False)
-    plt.pause(0.5)
-    
-    # Plotting the denoised
-    plt.figure(figsize=(12,12))
-    plt.imshow(picture_grid_denoised)
-    plt.title('Simulated SEM image denoised')
-    plt.colorbar()
-    plt.scatter(centerx, centery, c='red', marker='+', s=200, label='Center')
-    plt.legend()
-    plt.tight_layout()
-    plt.show(block=False)
-    plt.pause(0.5)
+        # Plotting of the meassured SEM image
+        plt.figure(figsize=(12,12))
+        plt.imshow(picture_grid)
+        plt.title('Simulated SEM image')
+        plt.colorbar()
+        plt.tight_layout()
+        plt.show(block=False)
+        plt.pause(0.5)
+        
+        # Plotting the denoised
+        plt.figure(figsize=(12,12))
+        plt.imshow(picture_grid_denoised)
+        plt.title('Simulated SEM image denoised')
+        plt.colorbar()
+        plt.scatter(centerx, centery, c='red', marker='+', s=200, label='Center')
+        plt.legend()
+        plt.tight_layout()
+        plt.show(block=False)
+        plt.pause(0.5)
 
-    # Plotting the I vs t
-    plt.figure()
-    plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
-    plt.xlabel("Beam current (pA)")
-    plt.ylabel("Time per 1 µm² image (s)")
-    plt.show(block=False)
+        # Plotting the I vs t
+        plt.figure()
+        plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
+        plt.xlabel("Beam current (pA)")
+        plt.ylabel("Time per 1 µm² image (s)")
+        plt.show(block=False)

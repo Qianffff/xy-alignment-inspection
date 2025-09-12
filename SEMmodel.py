@@ -268,7 +268,6 @@ def detect_and_plot_harris_corners(
         dot_alpha (float): Opacity of the red dots (0 = transparent, 1 = opaque).
     """
     denoised_grid = denoised_grid/np.max(denoised_grid)
-    #threshold_value = np.percentile(denoised_grid, percentile)
     threshold_value = np.max(denoised_grid)*percentile
     # Step 2: Apply thresholding
     denoised_grid = (denoised_grid >= threshold_value).astype(np.uint8)
@@ -315,7 +314,6 @@ def detect_and_plot_harris_corners(
 
 def cross_position(picture_grid_denoised, percentile):
     # Calculate threshold value based on specified percentile
-    #threshold_value = np.percentile(picture_grid_denoised, percentile)
     threshold_value = np.max(picture_grid_denoised)*percentile
     print(f"Threshold value ({percentile} percentile): {threshold_value:.6f}")
     

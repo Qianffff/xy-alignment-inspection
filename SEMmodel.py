@@ -364,7 +364,7 @@ if __name__ == "__main__":
     pixel_width_y = pixel_width_x
     
     # Frame width (in m)
-    frame_width_x = 0.5e-6 # (1e-6 according to Koen)
+    frame_width_x = 1e-6 # (1e-6 according to Koen)
     frame_width_y = frame_width_x
     
     # To model beam alignment error, the position of the center of the beam is normally distributed 
@@ -373,13 +373,13 @@ if __name__ == "__main__":
     
     # Create alignment mark (a cross of high SE escape factor (background +1 in the middle of the grid)
     # Dimensions in meter
-    cross_length = 300e-9
-    cross_line_width = 14e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
+    cross_length = 200e-9
+    cross_line_width = 28e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
     
     
     
     
-    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width,shift_x=0,shift_y=0)
+    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
     
     #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
     plt.figure(figsize=(13,13))
@@ -395,12 +395,6 @@ if __name__ == "__main__":
 
 
     picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
-
-
-    plot_kernel(half_pixel_width_gaussian_kernel,sigma)
-
-
-
 
 
     # Plotting
@@ -436,7 +430,7 @@ if __name__ == "__main__":
     plt.show()
     plt.pause(0.5)
 
-    # Plotting the denoised
+    # Plotting the denoised image
     plt.figure(figsize=(12,12))
     plt.imshow(picture_grid_denoised)
     plt.title('Simulated SEM image denoised')
@@ -447,21 +441,12 @@ if __name__ == "__main__":
     plt.show(block=False)
     plt.pause(0.5)
 
-    
-
-    
-    
-    
-    
+    # Listing some values of variables used in the simulation
     time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel
     print(f"Time to make image = {time_to_make_picture:.5f} seconds")
     print(f"Scan time per pixel = {scan_time_per_pixel*1e6:.5f} µs")
     print(f"Beam current = {beam_current*1e12} pA")
     print(f"Error std = {error_std*1e9:.3f} nm")
-
-
-
-
 
     # CNR = calculate_CNR()
     # print(f"Contrast to noise ratio = {CNR}")
@@ -480,7 +465,7 @@ if __name__ == "__main__":
                                           0.50000,0.60000,0.77500,0.95000,1.50000,2.95000])
     scan_time_per_pixel_array = scan_time_per_image_array/(pixels_x*pixels_y)
     
-    # Make the plot
+    # Make the plot for the beam current against time (old: without automatic alignment finding)
     plt.figure()
     plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
     plt.xlabel("Beam current (pA)")
@@ -489,9 +474,10 @@ if __name__ == "__main__":
     
     
     
+    # Finding the Harris corners and making a high contrast plot
     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
    
-
+    # Finding the rotation using the high contrast plot
     found_rotation = find_rotation(black_white_grid,0,0,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
     print(f"Found rotation = {found_rotation}")
     print(f"Angle error = {found_rotation-rotation:.2f}")

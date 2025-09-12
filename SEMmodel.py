@@ -393,17 +393,6 @@ if __name__ == "__main__":
     img_uint8 = cv2.normalize(picture_grid_denoised, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     _, binary_img = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    # Plotting the denoised image
-    plt.figure(figsize=(12,12))
-    plt.imshow(picture_grid_denoised)
-    plt.title('Simulated SEM image denoised')
-    plt.colorbar()
-    plt.scatter(centerx, centery, c='red', marker='+', s=200, label='Center')
-    plt.legend()
-    plt.tight_layout()
-    plt.show(block=False)
-    plt.pause(0.5)
-
     # Listing some values of variables used in the simulation
     time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel
     print(f"Time to make image = {time_to_make_picture:.5f} seconds")

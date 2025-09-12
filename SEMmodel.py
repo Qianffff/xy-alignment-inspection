@@ -23,7 +23,7 @@ using a Poisson distribution where the expectation value for each pixel is the e
 secondary electrons emitted by that pixel.
 """
 def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_width_y=1e-6,cross_length=100e-9,cross_line_width=14e-9,shift_x=None,shift_y=None,rotation=None,background_noise=True):
-    # The  number of pixels in the x and the y direction 
+    # The number of pixels in the x and the y direction 
     pixels_x = int(np.rint(frame_width_x/pixel_width_x))
     pixels_y = int(np.rint(frame_width_y/pixel_width_y))
     

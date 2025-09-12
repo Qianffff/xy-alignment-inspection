@@ -429,7 +429,7 @@ if __name__ == "__main__":
         plt.show()  
 
         # Write each item on a new line in the file
-        with open('output.txt', 'w') as file:
+        with open('output_Jart.txt', 'w') as file:
             for item in displacements:
                 file.write(str(item) + '\n')
    

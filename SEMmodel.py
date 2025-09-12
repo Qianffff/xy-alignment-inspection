@@ -97,7 +97,7 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
     expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
     
     # Calculate the beam width given the beam current
-    FWHM = 9e-9 # (in m)
+    FWHM = 8e-9 # (in m)
     sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
     sigma = sigma/pixel_width_x # (in px)
     half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
@@ -121,7 +121,10 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
 
     # Multiply by number of primary electrons per second (= beam current / e) and scan time
     e = 1.60217663e-19 # electron charge (in Coulomb)
-    expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel
+    # Fraction of SEs that successfully leave the surface (and will subsequently be detected)
+    escape_factor = 0.1
+    
+    expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel * escape_factor
     # If there is no background noise, some numbers may become smaller than 0.
     # This gives an error in the upcoming Poisson function
     expected_number_of_secondary_electrons[expected_number_of_secondary_electrons<0] = 0
@@ -265,8 +268,8 @@ def detect_and_plot_harris_corners(
         dot_alpha (float): Opacity of the red dots (0 = transparent, 1 = opaque).
     """
     denoised_grid = denoised_grid/np.max(denoised_grid)
-    threshold_value = np.percentile(denoised_grid, percentile)
-
+    #threshold_value = np.percentile(denoised_grid, percentile)
+    threshold_value = np.max(denoised_grid)*percentile
     # Step 2: Apply thresholding
     denoised_grid = (denoised_grid >= threshold_value).astype(np.uint8)
 
@@ -312,7 +315,8 @@ def detect_and_plot_harris_corners(
 
 def cross_position(picture_grid_denoised, percentile):
     # Calculate threshold value based on specified percentile
-    threshold_value = np.percentile(picture_grid_denoised, percentile)
+    #threshold_value = np.percentile(picture_grid_denoised, percentile)
+    threshold_value = np.max(picture_grid_denoised)*percentile
     print(f"Threshold value ({percentile} percentile): {threshold_value:.6f}")
     
     # Find coordinates where array values exceed the threshold
@@ -362,16 +366,16 @@ if __name__ == "__main__":
 
 # ===================== Parameters =====================
     # Beam current (in A)
-    beam_current = 0.5e-9 # 570e-12 based on Zeiss specs sheet
-    # Scan time per pixel (inverse of the scan rate)
-    scan_time_per_pixel = 0.32e-6 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
+    beam_current = 4e-9
+    # Scan time per pixel (in s) (inverse of the scan rate)
+    scan_time_per_pixel = 0.05e-6
     
     # Pixel size (in m)
-    pixel_width_x = 1e-9 # (2e-9 is a guess based on the ASML metrology and inspection systems webpage)
+    pixel_width_x = np.sqrt(2.5)*1e-9
     pixel_width_y = pixel_width_x
     
     # Frame width (in m)
-    frame_width_x = 1e-6 # (1e-6 according to Koen)
+    frame_width_x = np.sqrt(5)*1e-6
     frame_width_y = frame_width_x
     
     # To model beam alignment error, the position of the center of the beam is normally distributed 
@@ -386,8 +390,8 @@ if __name__ == "__main__":
     show_plots = True
     rotation_find_boolean = False
 
-    simulation_runs=20
-    intensity_threshold=99.75
+    simulation_runs=0
+    intensity_threshold=0.6
 # ===================== Process image =====================
 
     # Histogram of errors in detected positions
@@ -416,15 +420,15 @@ if __name__ == "__main__":
         displacement = np.sqrt(dx**2 + dy**2)
 
         displacements.append(displacement)
-
-    displacements = np.array(displacements)
-    #plotting of histogram
-    plt.figure(figsize=(8,6))
-    plt.hist(displacements, bins=20, color='skyblue', edgecolor='k')
-    plt.xlabel("Center shift (nm)")
-    plt.ylabel("Counts")
-    plt.title(f"Distribution of cross center shift\nBeam current = {beam_current*1e12:.1f} pA, runs = {simulation_runs}, time to make pictures = {time_to_make_picture}")
-    plt.show()     
+    if simulation_runs >0:
+        displacements = np.array(displacements)
+        #plotting of histogram
+        plt.figure(figsize=(8,6))
+        plt.hist(displacements, bins=20, color='skyblue', edgecolor='k')
+        plt.xlabel("Center shift (nm)")
+        plt.ylabel("Counts")
+        plt.title(f"Distribution of cross center shift\nBeam current = {beam_current*1e12:.1f} pA, runs = {simulation_runs}, time to make pictures = {time_to_make_picture}")
+        plt.show()     
 
 
 
@@ -441,15 +445,17 @@ if __name__ == "__main__":
 
     # Denoise the image
     picture_grid_denoised = denoise_image(picture_grid)
-    intensity_threshold=99.7
 
     # Position of the cross
     centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
+    # Difference between calculated cross center position and actual position (in m)
+    absolute_distance_error = np.linalg.norm([int(np.round(pixels_x/2+shift_x)) - centerx,int(np.round(pixels_y/2+shift_y)) - centery])*pixel_width_x
 
     # Listing some values of variables used in the simulation
     time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel
     print(f"Time to make image = {time_to_make_picture:.5f} seconds")
     print(f"Scan time per pixel = {scan_time_per_pixel*1e6:.5f} µs")
+    print(f"Absolute distance error = {absolute_distance_error*1e9:.3f} nm")
     print(f"Beam current = {beam_current*1e12} pA")
     print(f"Error std = {error_std*1e9:.3f} nm")
 

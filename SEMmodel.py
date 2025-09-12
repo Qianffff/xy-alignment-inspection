@@ -249,7 +249,8 @@ def detect_and_plot_harris_corners(
     k=0.04, 
     threshold_ratio=0.01, 
     dot_radius=1, 
-    dot_alpha=0.5  # Transparency: 0 (invisible) to 1 (solid)
+    dot_alpha=0.5,  # Transparency: 0 (invisible) to 1 (solid)
+    percentile=50
 ):
     """
     Perform Harris Corner Detection on a grayscale image and plot it with transparent red dots on corners.
@@ -264,7 +265,7 @@ def detect_and_plot_harris_corners(
         dot_alpha (float): Opacity of the red dots (0 = transparent, 1 = opaque).
     """
     denoised_grid = denoised_grid/np.max(denoised_grid)
-    threshold_value = np.percentile(denoised_grid, 99.7)
+    threshold_value = np.percentile(denoised_grid, percentile)
 
     # Step 2: Apply thresholding
     denoised_grid = (denoised_grid >= threshold_value).astype(np.uint8)
@@ -364,7 +365,7 @@ if __name__ == "__main__":
     # Beam current (in A)
     beam_current = 4e-9 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
-    scan_time_per_pixel = 0.2e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
+    scan_time_per_pixel = 0.005e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
     
     # Pixel size (in m)
     pixel_width_x = 1e-9 # (2e-9 is a guess based on the ASML metrology and inspection systems webpage)
@@ -398,7 +399,7 @@ if __name__ == "__main__":
 
     
     picture_grid_denoised = denoise_image(picture_grid)
-    intensity_threshold=50
+    intensity_threshold=99.7
     centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
     img_uint8 = cv2.normalize(picture_grid_denoised, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     _, binary_img = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -429,7 +430,7 @@ if __name__ == "__main__":
     scan_time_per_pixel_array = scan_time_per_image_array/(pixels_x*pixels_y)
 
     # Angle of the cross
-    black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
+    black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24,percentile=intensity_threshold)
     if rotation_find_boolean == True:
         found_rotation = find_rotation(black_white_grid,shift_x,shift_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
         print(f"Found rotation = {found_rotation}")

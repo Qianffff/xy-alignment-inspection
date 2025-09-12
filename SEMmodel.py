@@ -388,7 +388,7 @@ if __name__ == "__main__":
     show_plots = True
     rotation_find_boolean = False
 
-    simulation_runs=3
+    simulation_runs=1000
     intensity_threshold=0.6
 # ===================== Process image =====================
 
@@ -429,7 +429,7 @@ if __name__ == "__main__":
         plt.show()  
 
         # Write each item on a new line in the file
-        with open('output_Jart.txt', 'w') as file:
+        with open('output_Olivier.txt', 'w') as file:
             for item in displacements:
                 file.write(str(item) + '\n')
    

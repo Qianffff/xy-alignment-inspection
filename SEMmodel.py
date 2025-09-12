@@ -297,22 +297,22 @@ def detect_and_plot_harris_corners(
     plt.imshow(cv2.cvtColor(blended, cv2.COLOR_BGR2RGB))
     plt.title("Harris Corners with Transparent Red Dots")
     plt.axis('off')
-    plt.show(block=True)
-
+    plt.show(block=False)
+    plt.pause(0.1)
     return denoised_grid
 
 
-def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9):
+def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width_x=1e-6,frame_width_y=1e-6):
     score = np.zeros(90)
     for i in np.arange(0,90):
-        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=i,background_noise=False)[0]
+        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=i,background_noise=False,frame_width_x=frame_width_x,frame_width_y=frame_width_y)[0]
         # img_no_noise = img_no_noise/np.max(img_no_noise)
         score[i] = np.mean((img-img_no_noise)**2)
     best_i = np.argmin(score)
     angles_refined = np.arange(best_i-2.5,best_i+2.5,0.01)
     score_refined = np.zeros(np.shape(angles_refined))
     for j,angle in enumerate(angles_refined):
-        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=angle,background_noise=False)[0]
+        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=angle,background_noise=False,frame_width_x=frame_width_x,frame_width_y=frame_width_y)[0]
         # img_no_noise = img_no_noise/np.max(img_no_noise)
         score_refined[j] = np.mean((img-img_no_noise)**2)
     best_angle = angles_refined[np.argmin(score_refined)]
@@ -326,7 +326,7 @@ def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9):
 if __name__ == "__main__":
 
     # Beam current (in A)
-    beam_current = 5000e-13 # 570e-12 based on Zeiss specs sheet
+    beam_current = 5e-13 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
     scan_time_per_pixel = 4e-7 # (in s) (4e-7 based on total image time of 1 um^2 with 2 nm pixel size being 0.1 seconds (the 0.1 s is according to Koen))
     
@@ -335,7 +335,7 @@ if __name__ == "__main__":
     pixel_width_y = pixel_width_x
     
     # Frame width (in m)
-    frame_width_x = 1e-6 # (1e-6 according to Koen)
+    frame_width_x = 0.5e-6 # (1e-6 according to Koen)
     frame_width_y = frame_width_x
     
     # To model beam alignment error, the position of the center of the beam is normally distributed 
@@ -441,5 +441,6 @@ if __name__ == "__main__":
     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
    
 
-    found_rotation = find_rotation(black_white_grid,0,0,cross_length=cross_length,cross_width=cross_line_width)
+    found_rotation = find_rotation(black_white_grid,0,0,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
     print(f"Found rotation = {found_rotation}")
+    print(f"Angle error = {found_rotation-rotation:.2f}")

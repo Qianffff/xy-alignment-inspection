@@ -346,24 +346,7 @@ def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width_x=
     best_angle = angles_refined[np.argmin(score_refined)]
     return best_angle
 
-def cross_orientation_PCA(cross_points):
-    pts = np.array(cross_points, dtype=np.float32)
 
-    #OpenCV PCA
-    mean, eigenvectors = cv2.PCACompute(pts, mean=None)
-    vx, vy = eigenvectors[0]
-    angle = np.arctan2(vy, vx) * 180.0 / np.pi
-    return angle
-
-def cross_orientation_hough(binary_img):    
-    # Hough detection
-    lines = cv2.HoughLinesP(binary_img, 1, np.pi/180, threshold=30, minLineLength=20, maxLineGap=5)
-    angles = []
-    if lines is not None:
-        for x1, y1, x2, y2 in lines[:, 0]:
-            angle = np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi
-            angles.append(angle)
-    return angles
 
 
 
@@ -437,11 +420,9 @@ if __name__ == "__main__":
     picture_grid_denoised = denoise_image(picture_grid)
     intensity_threshold=50
     centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
-    angle_test = cross_orientation_PCA(cross_points)
     img_uint8 = cv2.normalize(picture_grid_denoised, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     _, binary_img = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    angle_test_h = cross_orientation_hough(binary_img)
 
 
     # ===================== Plot grayscale histogram =====================

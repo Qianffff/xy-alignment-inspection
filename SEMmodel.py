@@ -364,12 +364,12 @@ if __name__ == "__main__":
 
 # ===================== Parameters =====================
     # Beam current (in A)
-    beam_current = 4e-9
+    beam_current = 0.5e-9
     # Scan time per pixel (in s) (inverse of the scan rate)
-    scan_time_per_pixel = 0.05e-6
+    scan_time_per_pixel = 0.3204e-6
     
     # Pixel size (in m)
-    pixel_width_x = np.sqrt(2.5)*1e-9
+    pixel_width_x = 1e-9
     pixel_width_y = pixel_width_x
     
     # Frame width (in m)
@@ -388,7 +388,7 @@ if __name__ == "__main__":
     show_plots = True
     rotation_find_boolean = False
 
-    simulation_runs=1000
+    simulation_runs=100
     intensity_threshold=0.6
 # ===================== Process image =====================
 
@@ -429,11 +429,12 @@ if __name__ == "__main__":
         plt.show()  
 
         # Write each item on a new line in the file
-        with open('output_Olivier.txt', 'w') as file:
-            for item in displacements:
-                file.write(str(item) + '\n')
+        #with open('output_Olivier.txt', 'w') as file:
+        #    for item in displacements:
+        #        file.write(str(item) + '\n')
    
-
+    print('Mean error = ', np.mean(displacements))
+    print('Standard deviation of error = ', np.std(displacements))
 
 
 

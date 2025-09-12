@@ -388,7 +388,7 @@ if __name__ == "__main__":
     show_plots = True
     rotation_find_boolean = False
 
-    simulation_runs=0
+    simulation_runs=3
     intensity_threshold=0.6
 # ===================== Process image =====================
 
@@ -426,7 +426,13 @@ if __name__ == "__main__":
         plt.xlabel("Center shift (nm)")
         plt.ylabel("Counts")
         plt.title(f"Distribution of cross center shift\nBeam current = {beam_current*1e12:.1f} pA, runs = {simulation_runs}, time to make pictures = {time_to_make_picture}")
-        plt.show()     
+        plt.show()  
+
+        # Write each item on a new line in the file
+        with open('output.txt', 'w') as file:
+            for item in displacements:
+                file.write(str(item) + '\n')
+   
 
 
 

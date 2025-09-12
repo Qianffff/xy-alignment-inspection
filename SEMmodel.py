@@ -351,6 +351,7 @@ def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width_x=
 
 if __name__ == "__main__":
 
+# ===================== Parameters =====================
     # Beam current (in A)
     beam_current = 500e-12 # 570e-12 based on Zeiss specs sheet
     # Scan time per pixel (inverse of the scan rate)
@@ -374,23 +375,14 @@ if __name__ == "__main__":
     cross_line_width = 28e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
     
     
-    
-    
-    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)
-    
-    #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
-    plt.figure(figsize=(13,13))
-    plt.imshow(grid)
-    plt.title('Secondary electron escape factor grid')
-    plt.colorbar()
-    plt.show(block=False)
-    plt.pause(0.5)
-
+# ===================== Process image =====================
+    # Generate wafer image
+    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width,shift_x=0,shift_y=0)  
     print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
     print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
     print(f"Rotation = {rotation:.3f}")
 
-
+    # Use Gaussian distribution to meassure image
     picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
 
 
@@ -441,6 +433,7 @@ if __name__ == "__main__":
     print(f"Beam current = {beam_current*1e12} pA")
     print(f"Error std = {error_std*1e9:.3f} nm")
 
+
     # CNR = calculate_CNR()
     # print(f"Contrast to noise ratio = {CNR}")
     
@@ -457,20 +450,48 @@ if __name__ == "__main__":
                                           0.25250,0.27625,0.30125,0.32750,0.35375,0.39250,
                                           0.50000,0.60000,0.77500,0.95000,1.50000,2.95000])
     scan_time_per_pixel_array = scan_time_per_image_array/(pixels_x*pixels_y)
+
+    # Angle of the cross
+    black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
+    found_rotation = find_rotation(black_white_grid,0,0,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
+    print(f"Found rotation = {found_rotation}")
+    print(f"Angle error = {found_rotation-rotation:.2f}")
     
-    # Make the plot for the beam current against time (old: without automatic alignment finding)
+# ===================== Plot =====================
+    #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
+    plt.figure(figsize=(13,13))
+    plt.imshow(grid)
+    plt.title('Secondary electron escape factor grid')
+    plt.colorbar()
+    plt.show(block=False)
+    plt.pause(0.5)
+
+    #Plot the Gaussian kernel
+    plot_kernel(half_pixel_width_gaussian_kernel,sigma)
+
+    # Plotting of the meassured SEM image
+    plt.figure(figsize=(12,12))
+    plt.imshow(picture_grid)
+    plt.title('Simulated SEM image')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.show(block=False)
+    plt.pause(0.5)
+    
+    # Plotting the denoised
+    plt.figure(figsize=(12,12))
+    plt.imshow(picture_grid_denoised)
+    plt.title('Simulated SEM image denoised')
+    plt.colorbar()
+    plt.scatter(centerx, centery, c='red', marker='+', s=200, label='Center')
+    plt.legend()
+    plt.tight_layout()
+    plt.show(block=False)
+    plt.pause(0.5)
+
+    # Plotting the I vs t
     plt.figure()
     plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
     plt.xlabel("Beam current (pA)")
     plt.ylabel("Time per 1 µm² image (s)")
     plt.show(block=False)
-    
-    
-    
-    # Finding the Harris corners and making a high contrast plot
-    black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
-   
-    # Finding the rotation using the high contrast plot
-    found_rotation = find_rotation(black_white_grid,shift_x,shift_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
-    print(f"Found rotation = {found_rotation}")
-    print(f"Angle error = {found_rotation-rotation:.2f}")

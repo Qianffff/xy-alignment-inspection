@@ -388,7 +388,7 @@ if __name__ == "__main__":
     show_plots = True
     rotation_find_boolean = False
 
-    simulation_runs=3
+    simulation_runs=1000
     intensity_threshold=0.6
 # ===================== Process image =====================
 

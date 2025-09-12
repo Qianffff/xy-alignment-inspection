@@ -387,6 +387,7 @@ if __name__ == "__main__":
     rotation_find_boolean = False
 
     simulation_runs=20
+    intensity_threshold=99.7
 # ===================== Process image =====================
 
     # Histogram of errors in detected positions
@@ -403,7 +404,6 @@ if __name__ == "__main__":
 
         # Denoise the image
         picture_grid_denoised = denoise_image(picture_grid)
-        intensity_threshold=99.7
 
         # Position of the cross
         centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)

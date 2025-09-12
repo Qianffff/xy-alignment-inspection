@@ -387,7 +387,7 @@ if __name__ == "__main__":
     rotation_find_boolean = False
 
     simulation_runs=20
-    intensity_threshold=99.7
+    intensity_threshold=99.75
 # ===================== Process image =====================
 
     # Histogram of errors in detected positions

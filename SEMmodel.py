@@ -458,9 +458,9 @@ if __name__ == "__main__":
         plt.show(block=False)
         plt.pause(0.5)
 
-        # Plotting the I vs t
-        plt.figure()
-        plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
-        plt.xlabel("Beam current (pA)")
-        plt.ylabel("Time per 1 µm² image (s)")
-        plt.show(block=False)
+    # Plotting the I vs t
+    plt.figure()
+    plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
+    plt.xlabel("Beam current (pA)")
+    plt.ylabel("Time per 1 µm² image (s)")
+    plt.show(block=True)

@@ -43,8 +43,8 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     cross_pixel_half_width_minus = int(np.round(pixels_x/2-cross_pixel_width/2))
 
     # Random position and rotation cross
-    max_shift_x = int(np.round(cross_pixel_left_side - 1/8*pixels_x))
-    max_shift_y = int(np.round(cross_pixel_top_side - 1/8*pixels_y))
+    max_shift_x = int(np.round(pixels_x/2 - 5/8*cross_pixel_length))
+    max_shift_y = int(np.round(pixels_y/2 - 5/8*cross_pixel_length))
     if shift_x == None:
         shift_x = int(np.random.randint(-max_shift_x,max_shift_x))
     if shift_y == None:
@@ -373,7 +373,7 @@ if __name__ == "__main__":
     pixel_width_y = pixel_width_x
     
     # Frame width (in m)
-    frame_width_x = np.sqrt(5)*1e-6
+    frame_width_x = 0.3*1e-6
     frame_width_y = frame_width_x
     
     # To model beam alignment error, the position of the center of the beam is normally distributed 
@@ -485,15 +485,15 @@ if __name__ == "__main__":
 # ===================== Plot =====================
     if show_plots == True:
         #Plot the grid of SE yields. This represents what the real wafer pattern looks like.
-        plt.figure(figsize=(12,12))
-        plt.imshow(grid)
-        plt.title('Secondary electron yield grid')
-        plt.colorbar()
-        plt.show(block=False)
-        plt.pause(0.5)
+        #plt.figure(figsize=(12,12))
+        #plt.imshow(grid)
+        #plt.title('Secondary electron yield grid')
+        #plt.colorbar()
+        #plt.show(block=False)
+        #plt.pause(0.5)
 
         #Plot the Gaussian kernel
-        plot_kernel(half_pixel_width_gaussian_kernel,sigma)
+        #plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
         # Plotting of the meassured SEM image
         plt.figure(figsize=(12,12))
@@ -512,12 +512,12 @@ if __name__ == "__main__":
         plt.scatter(centerx, centery, c='red', marker='+', s=200, label='Center')
         plt.legend()
         plt.tight_layout()
-        plt.show(block=False)
+        plt.show(block=True)
         plt.pause(0.5)
 
         # Plotting the I vs t
-        plt.figure()
-        plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
-        plt.xlabel("Beam current (pA)")
-        plt.ylabel("Time per 1 µm² image (s)")
-        plt.show(block=True)
+        #plt.figure()
+        #plt.plot(beam_current_array,scan_time_per_image_array,"k.-")
+        #plt.xlabel("Beam current (pA)")
+        #plt.ylabel("Time per 1 µm² image (s)")
+        #plt.show(block=True)

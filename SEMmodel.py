@@ -420,7 +420,7 @@ if __name__ == "__main__":
 
     # Angle of the cross
     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24)
-    found_rotation = find_rotation(black_white_grid,0,0,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
+    found_rotation = find_rotation(black_white_grid,shift_x,shift_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
     print(f"Found rotation = {found_rotation}")
     print(f"Angle error = {found_rotation-rotation:.2f}")
     

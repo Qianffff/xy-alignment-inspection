@@ -378,7 +378,7 @@ if __name__ == "__main__":
     cross_line_width = 28e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
     
     
-    # ===================== Process image =====================
+# ===================== Process image =====================
     # Generate wafer image
     grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width,shift_x=0,shift_y=0)  
     print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
@@ -390,24 +390,6 @@ if __name__ == "__main__":
 
 
     plot_kernel(half_pixel_width_gaussian_kernel,sigma)
-
-
-
-
-
-    # Plotting
-    plt.figure(figsize=(12,12))
-    plt.imshow(picture_grid)
-    plt.title('Simulated SEM image')
-    plt.colorbar()
-    plt.tight_layout()
-    plt.show(block=False)
-    plt.pause(0.5)
-
-
-
-
-
 
     picture_grid_denoised = denoise_image(picture_grid)
     intensity_threshold=50
@@ -445,7 +427,7 @@ if __name__ == "__main__":
     print(f"Found rotation = {found_rotation}")
     print(f"Angle error = {found_rotation-rotation:.2f}")
     
-    # ===================== Plot =====================
+# ===================== Plot =====================
     #Plot the grid of SE escape factors. This represents what the real wafer pattern looks like.
     plt.figure(figsize=(13,13))
     plt.imshow(grid)

@@ -464,24 +464,6 @@ if __name__ == "__main__":
     print(f"Beam current = {beam_current*1e12} pA")
     print(f"Error std = {error_std*1e9:.3f} nm")
 
-
-    # CNR = calculate_CNR()
-    # print(f"Contrast to noise ratio = {CNR}")
-    
-    # Make a beam intensity vs time plot of the curve with CNR = 2
-    
-    # Values of beam current (in pA)
-    beam_current_array = np.array([3.1,3,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2,
-                                   1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1,1.0,0.9,
-                                   0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1])
-    # Values of the time to make the image (in s)
-    scan_time_per_image_array = np.array([0.1,0.11,0.11375,0.115,0.1175,0.1195,0.12125,
-                                          0.1225,0.1275,0.13,0.13375,0.1475,0.16375,
-                                          0.18,0.19250,0.19250,0.20000,0.19750,0.22500,
-                                          0.25250,0.27625,0.30125,0.32750,0.35375,0.39250,
-                                          0.50000,0.60000,0.77500,0.95000,1.50000,2.95000])
-    scan_time_per_pixel_array = scan_time_per_image_array/(pixels_x*pixels_y)
-
     # Angle of the cross
     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24,percentile=intensity_threshold)
     if rotation_find_boolean == True:

@@ -26,25 +26,33 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # The number of pixels in the x and the y direction 
     pixels_x = int(np.rint(frame_width_x/pixel_width_x))
     pixels_y = int(np.rint(frame_width_y/pixel_width_y))
+
+    if pixels_x % 2 == 0:
+        pixels_x += 1
     
+    if pixels_y % 2 == 0:
+        pixels_y += 1
+    
+    center_pixel_x = int(np.round((pixels_x+1)/2))
+    center_pixel_y = int(np.round((pixels_y+1)/2))
     # Grid of secondary electron (SE) yields
     grid = np.zeros([pixels_x,pixels_y])
     
     # Dimensions in pixels
-    cross_pixel_length = int(np.round(cross_length/pixel_width_x))
-    cross_pixel_width = int(np.round(cross_line_width/pixel_width_x))
+    cross_pixel_length_arm = int(np.round(cross_length/2/pixel_width_x))
+    cross_pixel_halfwidth = int(np.round(cross_line_width/2/pixel_width_x))
 
     # Define some useful parameters about the cross geometry
-    cross_pixel_left_side = int(np.round(pixels_x/2 - cross_pixel_length/2))
-    cross_pixel_right_side = cross_pixel_left_side + cross_pixel_length
-    cross_pixel_top_side = cross_pixel_left_side
-    cross_pixel_bottom_side = cross_pixel_right_side
-    cross_pixel_half_width_plus = int(np.round(pixels_x/2+cross_pixel_width/2))
-    cross_pixel_half_width_minus = int(np.round(pixels_x/2-cross_pixel_width/2))
+    cross_pixel_left_side = int(np.round(center_pixel_x - cross_pixel_length_arm)-1)
+    cross_pixel_right_side = int(np.round(center_pixel_x + cross_pixel_length_arm))
+    cross_pixel_top_side = int(np.round(center_pixel_y - cross_pixel_length_arm)-1)
+    cross_pixel_bottom_side = int(np.round(center_pixel_y + cross_pixel_length_arm))
+    cross_pixel_half_width_plus = int(np.round(center_pixel_x + cross_pixel_halfwidth))
+    cross_pixel_half_width_minus = int(np.round(center_pixel_x - cross_pixel_halfwidth)-1)
 
     # Random position and rotation cross
-    max_shift_x = int(np.round(pixels_x/2 - 5/8*cross_pixel_length))
-    max_shift_y = int(np.round(pixels_y/2 - 5/8*cross_pixel_length))
+    max_shift_x = int(np.round(center_pixel_x - 10/8*cross_pixel_length_arm))
+    max_shift_y = int(np.round(center_pixel_y - 10/8*cross_pixel_length_arm))
     if shift_x == None:
         shift_x = int(np.random.randint(-max_shift_x,max_shift_x))
     if shift_y == None:
@@ -86,7 +94,7 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # Use the first to have some randomness, and the second for a constant yield
     if background_noise == True:
         grid += np.random.random([pixels_x,pixels_y])*0.5
-    # grid = np.ones([pixels_x,pixels_y])
+
     return grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation
 
 def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,scan_time_per_pixel=4e-7,error_std=8e-9):
@@ -364,12 +372,12 @@ if __name__ == "__main__":
 
 # ===================== Parameters =====================
     # Beam current (in A)
-    beam_current = 0.5e-9
+    beam_current = 0.2e-9
     # Scan time per pixel (in s) (inverse of the scan rate)
-    scan_time_per_pixel = 0.3204e-6
+    scan_time_per_pixel = 0.05e-6
     
     # Pixel size (in m)
-    pixel_width_x = 1e-9
+    pixel_width_x = np.sqrt(2.5)*1e-9
     pixel_width_y = pixel_width_x
     
     # Frame width (in m)
@@ -388,14 +396,15 @@ if __name__ == "__main__":
     show_plots = True
     rotation_find_boolean = False
 
-    simulation_runs=100
+    simulation_runs=0
     intensity_threshold=0.6
 # ===================== Process image =====================
 
     # Histogram of errors in detected positions
     displacements = []
 
-    for _ in range(simulation_runs):            
+    for i in range(simulation_runs):  
+        print(i)          
         # Generate wafer image
         grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
         print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
@@ -413,8 +422,8 @@ if __name__ == "__main__":
         # Listing some values of variables used in the simulation
         time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel   
         # Compute displacement (Euclidean distance in pixels)
-        dx = (centerx - int(np.round(pixels_x/2+shift_x))) * pixel_width_x * 1e9  # nm
-        dy = (centery - int(np.round(pixels_y/2+shift_y))) * pixel_width_y * 1e9  # nm
+        dx = (centerx - int(np.round((pixels_x+1)/2+shift_x))) * pixel_width_x * 1e9  # nm
+        dy = (centery - int(np.round((pixels_y+1)/2+shift_y))) * pixel_width_y * 1e9  # nm
         displacement = np.sqrt(dx**2 + dy**2)
 
         displacements.append(displacement)
@@ -492,12 +501,12 @@ if __name__ == "__main__":
 # ===================== Plot =====================
     if show_plots == True:
         #Plot the grid of SE yields. This represents what the real wafer pattern looks like.
-        #plt.figure(figsize=(12,12))
-        #plt.imshow(grid)
-        #plt.title('Secondary electron yield grid')
-        #plt.colorbar()
-        #plt.show(block=False)
-        #plt.pause(0.5)
+        plt.figure(figsize=(12,12))
+        plt.imshow(grid)
+        plt.title('Secondary electron yield grid')
+        plt.colorbar()
+        plt.show(block=False)
+        plt.pause(0.5)
 
         #Plot the Gaussian kernel
         #plot_kernel(half_pixel_width_gaussian_kernel,sigma)

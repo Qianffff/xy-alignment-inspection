@@ -122,20 +122,28 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
     sigma = sigma/pixel_width_x # (in px)
     half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
     
-    
+    #Defines the direction in which the beam drift occurs
+    random_angle = np.random.uniform(0,2*np.pi)
+    print(f"RANDOM ANGLE = {random_angle*180/np.pi}")
     
     for i in range(pixels_x):
 
         for j in range(pixels_y):
             # Random beam landing position error in x and y direction (in pixels)
-            error_shift_x = np.random.normal(scale=error_std) / pixel_width_x
-            error_shift_y = np.random.normal(scale=error_std) / pixel_width_y
+            error_shift_x = (np.random.normal(scale=error_std) + np.cos(random_angle)*np.abs((np.random.normal(scale=(i*pixels_x + j + (FOV_count-1) * pixels_x * pixels_y) * (drift_rate * scan_time_per_pixel))))) / pixel_width_x 
+            error_shift_y = (np.random.normal(scale=error_std) + np.sin(random_angle)*np.abs((np.random.normal(scale=(i*pixels_x + j + (FOV_count-1) * pixels_x * pixels_y) * (drift_rate * scan_time_per_pixel))))) / pixel_width_y 
             # Create kernel
-            kernel_ij = gauss_kernel(2*half_pixel_width_gaussian_kernel+1,
+            kernel_ij, i_shift, j_shift = gauss_kernel(2*half_pixel_width_gaussian_kernel+1,
                                      sigma,error_shift_x,error_shift_y)
+            i_convolve, j_convolve = int(np.round(i+i_shift)), int(np.round(j+j_shift))
+            if i+i_shift < 0: i_convolve = 0
+            if i+i_shift > pixels_x-1: i_convolve = pixels_x - 1
+            if j+j_shift < 0: j_convolve = 0
+            if j+j_shift > pixels_y-1: j_convolve = pixels_y - 1
+
             # Perform the convolution
             expected_number_of_secondary_electrons[i, j] = convolve_at_pixel(
-                real_image, kernel_ij, i, j)
+                real_image, kernel_ij, i_convolve, j_convolve)
         # Progress bar
         if int(np.round(i/pixels_x*100000)) % 5000 == 0:
             print(str(int(np.round(i/pixels_x*100)))+str("%"),end=" ")
@@ -158,11 +166,18 @@ def shifted_gauss1d(gauss_pixels,sigma,shift):
     return np.exp(-0.5 * ((x - center) / sigma) ** 2)
 
 def gauss_kernel(gauss_pixels,sigma,shift_x=0,shift_y=0):
-    gauss1d_x = shifted_gauss1d(gauss_pixels,sigma,shift_x)
-    gauss1d_y = shifted_gauss1d(gauss_pixels,sigma,shift_y)
+    shift_x_rest = shift_x - np.trunc(shift_x)
+    shift_y_rest = shift_y - np.trunc(shift_y)
+    shift_x_pixel = np.trunc(shift_x)
+    shift_y_pixel = np.trunc(shift_y)
+    gauss1d_x = shifted_gauss1d(gauss_pixels,sigma,shift_x_rest)
+    gauss1d_y = shifted_gauss1d(gauss_pixels,sigma,shift_y_rest)
     kernel = np.outer(gauss1d_x, gauss1d_y)
-    kernel = kernel / kernel.sum()
-    return kernel
+    if kernel.sum() > 0:
+        kernel = kernel / kernel.sum()
+    if kernel.sum() == 0:
+        kernel = kernel
+    return kernel, shift_x_pixel, shift_y_pixel
 
 # The standard functions in scipy/numpy implemented the convolution function
 # to perform the convolution on the entire array, while we want to do it on a 
@@ -193,6 +208,7 @@ def convolve_at_pixel(grid, kernel, i, j):
     k_j_end   = k_j_start + patch.shape[1]
     kernel_cropped = kernel[k_i_start:k_i_end, k_j_start:k_j_end]
 
+    kernel_cropped = kernel_cropped/kernel_cropped.sum()
     # Elementwise multiply and sum
     return np.sum(patch * kernel_cropped)
 
@@ -381,7 +397,7 @@ if __name__ == "__main__":
 
 # ===================== Parameters =====================
     # Beam current (in A)
-    beam_current = 0.2e-9
+    beam_current = 0.5e-9
     e = 1.60217663e-19 # electron charge (in Coulomb)
     # Fraction of SEs that successfully leave the surface (and will subsequently be detected)
     escape_factor = 0.2
@@ -391,28 +407,32 @@ if __name__ == "__main__":
     SE_yield = background_noise_level/2 + SE_yield_cross
     # Scan time per pixel (in s) (inverse of the scan rate)
 
-    SNR = 5
+    SNR = 10
     scan_time_per_pixel = SNR**2/(SE_yield * escape_factor * collector_efficiency * (beam_current/e))
     
     # Pixel size (in m)
-    pixel_width_x = 15*1e-9
+    pixel_width_x = 5*1e-9
     pixel_width_y = pixel_width_x
     
     # Pixel size of (real) original image (not really a pixel,since approximates reality) (in m)
-    pixel_width_real_x_max = 5*1e-9
-    pixel_width_real_y_max = 5*1e-9
+    pixel_width_real_x_max = 1*1e-9
+    pixel_width_real_y_max = 1*1e-9
     pixel_width_real_x = calculate_original_pixel_size(pixel_width_x,pixel_width_real_x_max)
     pixel_width_real_y = calculate_original_pixel_size(pixel_width_y,pixel_width_real_y_max)
 
     resize_factor = int(np.round(pixel_width_x/pixel_width_real_x))
 
     # Frame width (in m)
-    frame_width_x = 8*1e-6
+    frame_width_x = 1*1e-6
     frame_width_y = frame_width_x
     
     # To model beam alignment error, the position of the center of the beam is normally distributed 
     # around the position of the targeted pixel, with standard deviation error_std (in m).
     error_std = 8e-9 # (8e-9 is a guess based on the breakdown of the sources of alignment error)
+
+    # We expect position error due to max allowable pos. error of 8nm in the time it takes to make one grid (about 60 seconds).
+    drift_rate = 4e-9/60 # m/s position error due to drift. 
+    FOV_count = 10000 # needs to be >= 1
     
     # Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
     # Dimensions in meter
@@ -425,7 +445,7 @@ if __name__ == "__main__":
     rotation_find_boolean = False
 
     simulation_runs=0
-    intensity_threshold=0.95
+    intensity_threshold=0.7
 # ===================== Process image =====================
 
     # Histogram of errors in detected positions

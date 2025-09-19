@@ -28,6 +28,7 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # Random position and rotation cross
     max_shift_x = int(np.round(center_pixel_x - 10/8*cross_pixel_length_arm))
     max_shift_y = int(np.round(center_pixel_y - 10/8*cross_pixel_length_arm))
+
     if shift_x == None:
         shift_x = int(np.random.randint(-max_shift_x,max_shift_x))
     if shift_y == None:

@@ -38,8 +38,8 @@ resize_factor = int(np.round(pixel_width_x/pixel_width_real_x))
 frame_width_x = 1*1e-6
 frame_width_y = frame_width_x
 
-pixels_x = int(np.rint(frame_width_x/pixel_width_x))
-pixels_y = int(np.rint(frame_width_y/pixel_width_y))
+pixels_x = int(np.rint(frame_width_x/pixel_width_real_x))
+pixels_y = int(np.rint(frame_width_y/pixel_width_real_y))
 
 if pixels_x % 2 == 0:
     pixels_x += 1

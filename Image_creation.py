@@ -1,26 +1,12 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.ndimage import rotate, shift
-from skimage.restoration import denoise_nl_means, estimate_sigma
-import cv2
 from skimage.measure import block_reduce
 from Kernel_and_convolution import *
-from Cross_detection import *
-from Denoise_functions import *
-from Function_graveyard import *
 from Variables_and_constants import *
 
 
 def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_width_y=1e-6,cross_length=100e-9,cross_line_width=14e-9,shift_x=None,shift_y=None,rotation=None,background_noise=True):
     # The number of pixels in the x and the y direction 
-    pixels_x = int(np.rint(frame_width_x/pixel_width_x))
-    pixels_y = int(np.rint(frame_width_y/pixel_width_y))
-
-    if pixels_x % 2 == 0:
-        pixels_x += 1
-    
-    if pixels_y % 2 == 0:
-        pixels_y += 1
     
     center_pixel_x = int(np.round((pixels_x+1)/2))
     center_pixel_y = int(np.round((pixels_y+1)/2))
@@ -86,11 +72,6 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
 
     return grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation
 
-def calculate_original_pixel_size(new_pixel_size_nm,original_pixel_size_nm_maximum):
-    original_pixel_size_nm = new_pixel_size_nm
-    while original_pixel_size_nm > original_pixel_size_nm_maximum:
-        original_pixel_size_nm = original_pixel_size_nm/2
-    return original_pixel_size_nm
 
 def resample_image_by_pixel_size(img, original_pixel_size_nm, new_pixel_size_nm):
     factor = int(np.round(new_pixel_size_nm/original_pixel_size_nm))

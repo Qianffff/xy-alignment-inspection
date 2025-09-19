@@ -1,14 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.ndimage import rotate, shift
 from skimage.restoration import denoise_nl_means, estimate_sigma
-import cv2
-from skimage.measure import block_reduce
-from Kernel_and_convolution import *
-from Cross_detection import *
-from Image_creation import *
-from Function_graveyard import *
-from Variables_and_constants import *
 
 # Transformations from Poisson noise to Gaussian noise and back
 def anscombe_transform(image):

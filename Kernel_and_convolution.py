@@ -1,13 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.ndimage import rotate, shift
-from skimage.restoration import denoise_nl_means, estimate_sigma
-import cv2
-from skimage.measure import block_reduce
-from Cross_detection import *
-from Image_creation import *
-from Denoise_functions import *
-from Function_graveyard import *
 from Variables_and_constants import *
 
 # Define the function which generates the Gauss kernel that is used in the convolution

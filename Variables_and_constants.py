@@ -1,16 +1,10 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.ndimage import rotate, shift
-from skimage.restoration import denoise_nl_means, estimate_sigma
-import cv2
-from skimage.measure import block_reduce
-from Kernel_and_convolution import *
-from Cross_detection import *
-from Image_creation import *
-from Denoise_functions import *
-from Function_graveyard import *
 
-
+def calculate_original_pixel_size(new_pixel_size_nm,original_pixel_size_nm_maximum):
+    original_pixel_size_nm = new_pixel_size_nm
+    while original_pixel_size_nm > original_pixel_size_nm_maximum:
+        original_pixel_size_nm = original_pixel_size_nm/2
+    return original_pixel_size_nm
 
 
 # ===================== Parameters =====================
@@ -43,6 +37,15 @@ resize_factor = int(np.round(pixel_width_x/pixel_width_real_x))
 # Frame width (in m)
 frame_width_x = 1*1e-6
 frame_width_y = frame_width_x
+
+pixels_x = int(np.rint(frame_width_x/pixel_width_x))
+pixels_y = int(np.rint(frame_width_y/pixel_width_y))
+
+if pixels_x % 2 == 0:
+    pixels_x += 1
+
+if pixels_y % 2 == 0:
+    pixels_y += 1
 
 # To model beam alignment error, the position of the center of the beam is normally distributed 
 # around the position of the targeted pixel, with standard deviation error_std (in m).

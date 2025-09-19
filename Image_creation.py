@@ -115,7 +115,8 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
             if int(np.round(i/pixels_x*100)) % 5 == 0:
                 print(str(int(np.round(i/pixels_x*100)))+str("%"),end=" ")
 
-    
+
+    print("\n")
     expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel * escape_factor * collector_efficiency
     # If there is no background noise, some numbers may become smaller than 0.
     # This gives an error in the upcoming Poisson function

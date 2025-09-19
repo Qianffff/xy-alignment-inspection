@@ -110,6 +110,8 @@ def resample_image_by_pixel_size(img, original_pixel_size_nm, new_pixel_size_nm)
     return downsampled_img
 
 def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,scan_time_per_pixel=4e-7,error_std=8e-9):
+    
+    
     # Calculate the expected number of SE per pixel
     pixels_x = np.shape(real_image)[0]
     pixels_y = np.shape(real_image)[0]
@@ -431,7 +433,7 @@ if __name__ == "__main__":
     error_std = 8e-9 # (8e-9 is a guess based on the breakdown of the sources of alignment error)
 
     # We expect position error due to max allowable pos. error of 8nm in the time it takes to make one grid (about 60 seconds).
-    drift_rate = 4e-9/60 # m/s position error due to drift. 
+    drift_rate = 5e-9/60 # m/s position error due to drift. 
     FOV_count = 10000 # needs to be >= 1
     
     # Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)

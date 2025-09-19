@@ -6,31 +6,32 @@ from Function_graveyard import *
 from Variables_and_constants import *
 
 # Generate wafer image
-grid, pixel_width_real, pixels_real_x, pixels_real_y, shift_real_x, shift_real_y, rotation = real_image(pixel_width_real,frame_width_x,frame_width_y,cross_length,cross_line_width)  
+grid, cross_center = real_image(frame_width)  
 
 # Resize image to go from real/original pixel width to measure pixel width
-grid_resampled = resample_image_by_pixel_size(grid, pixel_width_real, pixel_width)
+grid_resampled = resample_image_by_pixel_size(grid, pixel_width)
 
 # Use Gaussian distribution to meassure image
-picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid_resampled, pixel_width, beam_current, scan_time_per_pixel)
+picture_grid = measured_image(grid_resampled, pixel_width,SNR)
 
 # Denoise the image
 picture_grid_denoised = denoise_image(picture_grid)
 
-# Position of the cross
-centerx, centery, cross_points = cross_position(picture_grid_denoised,intensity_threshold)
+# Calculate the position of the cross from the image
+cross_center_measured_px = cross_position(picture_grid_denoised,intensity_threshold)
+cross_center_measured = cross_center_measured_px * pixel_width # Convert from pixels to meters
 # Difference between calculated cross center position and actual position (in m)
-absolute_distance_error = np.linalg.norm([int(np.round(pixels_real_x/2+shift_real_x)) - centerx*resize_factor,int(np.round(pixels_real_y/2+shift_real_y)) - centery*resize_factor])*pixel_width_real
+absolute_distance_error = np.linalg.norm([cross_center[0] - cross_center_measured[0], cross_center[1] - cross_center_measured[1]])
 
 # Listing some values of variables used in the simulation
-time_to_make_picture = (pixels_real_x/resize_factor)*(pixels_real_y/resize_factor)*scan_time_per_pixel
+time_to_make_picture = pixels**2*scan_time_per_pixel
 print(f"Time to make image = {time_to_make_picture:.5f} seconds")
 print(f"Scan time per pixel = {scan_time_per_pixel*1e6:.5f} µs")
 print(f"Absolute distance error = {absolute_distance_error*1e9:.3f} nm")
 
 # ===================== Plot =====================
 if show_plots == True:
-    #Plot the grid of SE yields. This represents what the real wafer pattern looks like.
+    # Plot the grid of SE yields. This represents what the real wafer pattern looks like.
     plt.figure(figsize=(12,12))
     plt.imshow(grid)
     plt.title('Secondary electron yield grid')
@@ -55,9 +56,8 @@ if show_plots == True:
     plt.imshow(picture_grid_denoised)
     plt.title('Simulated SEM image denoised')
     plt.colorbar()
-    plt.scatter(centerx, centery, c='red', marker='+', s=200, label='Center')
+    plt.scatter(cross_center_measured_px[0], cross_center_measured_px[1], c='red', marker='+', s=200, label='Center')
     plt.legend()
     plt.tight_layout()
     plt.show(block=True)
     plt.pause(0.5)
-

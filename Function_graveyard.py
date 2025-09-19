@@ -37,7 +37,7 @@ def calculate_CNR(picture_grid,
     cross_average = cross_sum/cross_pixels
 
     # Calculate background std, number of pixels, and average secondary electron yield
-    background_left, background_right, background_top, background_bottom = int(pixels_y*1/20), int(pixels_y*8/20), int(pixels_x*1/20), int(pixels_x*8/20)
+    background_left, background_right, background_top, background_bottom = int(pixels*1/20), int(pixels*8/20), int(pixels*1/20), int(pixels*8/20)
     background_grid = picture_grid[background_left:background_right, background_top:background_bottom]
     background_sum = np.sum(background_grid)
     background_pixels = np.size(background_grid)
@@ -49,17 +49,17 @@ def calculate_CNR(picture_grid,
     return CNR
 
 
-def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width_x=1e-6,frame_width_y=1e-6):
+def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width=1e-6):
     score = np.zeros(90)
     for i in np.arange(0,90):
-        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=i,background_noise=False,frame_width_x=frame_width_x,frame_width_y=frame_width_y)[0]
+        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=i,background_noise=False)[0]
         # img_no_noise = img_no_noise/np.max(img_no_noise)
         score[i] = np.mean((img-img_no_noise)**2)
     best_i = np.argmin(score)
     angles_refined = np.arange(best_i-2.5,best_i+2.5,0.01)
     score_refined = np.zeros(np.shape(angles_refined))
     for j,angle in enumerate(angles_refined):
-        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=angle,background_noise=False,frame_width_x=frame_width_x,frame_width_y=frame_width_y)[0]
+        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=angle,background_noise=False)[0]
         # img_no_noise = img_no_noise/np.max(img_no_noise)
         score_refined[j] = np.mean((img-img_no_noise)**2)
     best_angle = angles_refined[np.argmin(score_refined)]
@@ -71,6 +71,6 @@ def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width_x=
 #     # Angle of the cross
 #     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24,percentile=intensity_threshold)
 #     if rotation_find_boolean == True:
-#         found_rotation = find_rotation(black_white_grid,shift_real_x,shift_real_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
+#         found_rotation = find_rotation(black_white_grid,shift_real_x,shift_real_y,cross_length=cross_length,cross_width=cross_line_width)
 #         print(f"Found rotation = {found_rotation}")
 #         print(f"Angle error = {found_rotation-rotation:.2f}")

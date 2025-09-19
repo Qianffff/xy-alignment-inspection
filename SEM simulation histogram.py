@@ -10,29 +10,28 @@ displacements = []
 for i in range(simulation_runs):  
     print(i)          
     # Generate wafer image
-    grid, pixel_width, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_real,frame_width_x,frame_width_y,cross_length,cross_line_width)  
-    print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
-    print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
+    grid, cross_center = real_image(frame_width)  
+    print(f"Cross middle x pixel = {int(np.round(cross_center[0]/pixel_width))}")
+    print(f"Cross middle y pixel = {int(np.round(cross_center[1]/pixel_width))}")
 
     # Resize image to go from real/original pixel width to measure pixel width
-    grid = resample_image_by_pixel_size(grid, pixel_width_real, pixel_width)
+    grid = resample_image_by_pixel_size(grid, pixel_width)
 
     # Use Gaussian distribution to meassure image
-    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width, beam_current, scan_time_per_pixel)
+    picture_grid = measured_image(grid, pixel_width,SNR)
 
     # Denoise the image
     picture_grid_denoised = denoise_image(picture_grid)
 
     # Position of the cross
-    centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
-
+    cross_center_measured_px = cross_position(picture_grid_denoised,intensity_threshold)
+    cross_center_measured = cross_center_measured_px * pixel_width # Convert from pixels to meters  
+    # Compute displacement (in nm)
+    displacement = np.linalg.norm([cross_center[0] - cross_center_measured[0], cross_center[1] - cross_center_measured[1]]) * 1e9
+    
     # Listing some values of variables used in the simulation
-    time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel   
-    # Compute displacement (Euclidean distance in pixels)
-    dx = (centerx - int(np.round((pixels_x+1)/2+shift_x))) * pixel_width * 1e9  # nm
-    dy = (centery - int(np.round((pixels_y+1)/2+shift_y))) * pixel_width * 1e9  # nm
-    displacement = np.sqrt(dx**2 + dy**2)
-
+    time_to_make_picture = pixels**2*scan_time_per_pixel 
+    
     displacements.append(displacement)
 if simulation_runs >0:
     displacements = np.array(displacements)

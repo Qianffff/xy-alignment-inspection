@@ -84,10 +84,12 @@ def cross_position(picture_grid_denoised, percentile):
     if len(cross_points) > 0:
         points_array = np.array(cross_points)  # shape = (N, 2)
         
+        # Calculate the center of the cross (in pixels)
         center_x = np.mean(points_array[:, 0])
         center_y = np.mean(points_array[:, 1])
+        cross_center_measured_px = np.array([center_x,center_y])
         
     else:
         print("No points found above threshold.")
-    
-    return center_x, center_y, cross_points
+        
+    return cross_center_measured_px

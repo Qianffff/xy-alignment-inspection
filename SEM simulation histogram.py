@@ -10,15 +10,15 @@ displacements = []
 for i in range(simulation_runs):  
     print(i)          
     # Generate wafer image
-    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_real_x,pixel_width_real_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
+    grid, pixel_width, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_real,frame_width_x,frame_width_y,cross_length,cross_line_width)  
     print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
     print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
 
     # Resize image to go from real/original pixel width to measure pixel width
-    grid = resample_image_by_pixel_size(grid, pixel_width_real_x, pixel_width_x)
+    grid = resample_image_by_pixel_size(grid, pixel_width_real, pixel_width)
 
     # Use Gaussian distribution to meassure image
-    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
+    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width, beam_current, scan_time_per_pixel)
 
     # Denoise the image
     picture_grid_denoised = denoise_image(picture_grid)
@@ -29,8 +29,8 @@ for i in range(simulation_runs):
     # Listing some values of variables used in the simulation
     time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel   
     # Compute displacement (Euclidean distance in pixels)
-    dx = (centerx - int(np.round((pixels_x+1)/2+shift_x))) * pixel_width_x * 1e9  # nm
-    dy = (centery - int(np.round((pixels_y+1)/2+shift_y))) * pixel_width_y * 1e9  # nm
+    dx = (centerx - int(np.round((pixels_x+1)/2+shift_x))) * pixel_width * 1e9  # nm
+    dy = (centery - int(np.round((pixels_y+1)/2+shift_y))) * pixel_width * 1e9  # nm
     displacement = np.sqrt(dx**2 + dy**2)
 
     displacements.append(displacement)

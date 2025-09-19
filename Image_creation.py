@@ -5,7 +5,7 @@ from Kernel_and_convolution import *
 from Variables_and_constants import *
 
 
-def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_width_y=1e-6,cross_length=100e-9,cross_line_width=14e-9,shift_x=None,shift_y=None,rotation=None,background_noise=True):
+def real_image(pixel_width=2e-9,frame_width_x=1e-6,frame_width_y=1e-6,cross_length=100e-9,cross_line_width=14e-9,shift_x=None,shift_y=None,rotation=None,background_noise=True):
     # The number of pixels in the x and the y direction 
     
     center_pixel_x = int(np.round((pixels_x+1)/2))
@@ -14,8 +14,8 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     grid = np.zeros([pixels_x,pixels_y])
     
     # Dimensions in pixels
-    cross_pixel_length_arm = int(np.round(cross_length/2/pixel_width_x))
-    cross_pixel_halfwidth = int(np.round(cross_line_width/2/pixel_width_x))
+    cross_pixel_length_arm = int(np.round(cross_length/2/pixel_width))
+    cross_pixel_halfwidth = int(np.round(cross_line_width/2/pixel_width))
 
     # Define some useful parameters about the cross geometry
     cross_pixel_left_side = int(np.round(center_pixel_x - cross_pixel_length_arm)-1)
@@ -71,7 +71,7 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     if background_noise == True:
         grid += np.random.random([pixels_x,pixels_y])*background_noise_level
 
-    return grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation
+    return grid, pixel_width, pixels_x, pixels_y, shift_x, shift_y, rotation
 
 
 def resample_image_by_pixel_size(img, original_pixel_size_nm, new_pixel_size_nm):
@@ -79,7 +79,7 @@ def resample_image_by_pixel_size(img, original_pixel_size_nm, new_pixel_size_nm)
     downsampled_img = block_reduce(img,block_size=(factor,factor),func=np.mean)
     return downsampled_img
 
-def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,scan_time_per_pixel=4e-7,error_std=8e-9):
+def measured_image(real_image,pixel_width,beam_current=500e-12,scan_time_per_pixel=4e-7,error_std=8e-9):
     
     
     # Calculate the expected number of SE per pixel
@@ -96,8 +96,8 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
 
         for j in range(pixels_y):
             # Random beam landing position error in x and y direction (in pixels)
-            error_shift_x = (np.random.normal(scale=error_std) + np.cos(random_angle)*np.abs((np.random.normal(scale=(i*pixels_x + j + (FOV_count-1) * pixels_x * pixels_y) * (drift_rate * scan_time_per_pixel))))) / pixel_width_x 
-            error_shift_y = (np.random.normal(scale=error_std) + np.sin(random_angle)*np.abs((np.random.normal(scale=(i*pixels_x + j + (FOV_count-1) * pixels_x * pixels_y) * (drift_rate * scan_time_per_pixel))))) / pixel_width_y 
+            error_shift_x = (np.random.normal(scale=error_std) + np.cos(random_angle)*np.abs((np.random.normal(scale=(i*pixels_x + j + (FOV_count-1) * pixels_x * pixels_y) * (drift_rate * scan_time_per_pixel))))) / pixel_width 
+            error_shift_y = (np.random.normal(scale=error_std) + np.sin(random_angle)*np.abs((np.random.normal(scale=(i*pixels_x + j + (FOV_count-1) * pixels_x * pixels_y) * (drift_rate * scan_time_per_pixel))))) / pixel_width 
             # Create kernel
             kernel_ij, i_shift, j_shift = gauss_kernel(2*half_pixel_width_gaussian_kernel+1,
                                      sigma,error_shift_x,error_shift_y)

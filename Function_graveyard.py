@@ -66,6 +66,8 @@ def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width_x=
     return best_angle
 
 # if __name__ == "__main__":
+#     rotation_find_boolean = False
+#
 #     # Angle of the cross
 #     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24,percentile=intensity_threshold)
 #     if rotation_find_boolean == True:

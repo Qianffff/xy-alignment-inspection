@@ -91,7 +91,6 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
     
     #Defines the direction in which the beam drift occurs
     random_angle = np.random.uniform(0,2*np.pi)
-    print(f"RANDOM ANGLE = {random_angle*180/np.pi}")
     
     for i in range(pixels_x):
 
@@ -112,8 +111,9 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
             expected_number_of_secondary_electrons[i, j] = convolve_at_pixel(
                 real_image, kernel_ij, i_convolve, j_convolve)
         # Progress bar
-        if int(np.round(i/pixels_x*100000)) % 5000 == 0:
-            print(str(int(np.round(i/pixels_x*100)))+str("%"),end=" ")
+        if int(np.round((i-1)/pixels_x*100)) % 5 != 0:
+            if int(np.round(i/pixels_x*100)) % 5 == 0:
+                print(str(int(np.round(i/pixels_x*100)))+str("%"),end=" ")
 
     
     expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel * escape_factor * collector_efficiency

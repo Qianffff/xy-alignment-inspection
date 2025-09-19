@@ -73,7 +73,6 @@ def detect_and_plot_harris_corners(
 def cross_position(picture_grid_denoised, percentile):
     # Calculate threshold value based on specified percentile
     threshold_value = np.max(picture_grid_denoised)*percentile
-    print(f"Threshold value ({percentile} percentile): {threshold_value:.6f}")
     
     # Find coordinates where array values exceed the threshold
     # np.where returns (y_coordinates, x_coordinates)
@@ -81,8 +80,6 @@ def cross_position(picture_grid_denoised, percentile):
     
     # Convert to list of (x, y) coordinate tuples
     cross_points = list(zip(x_coords, y_coords))
-    
-    print(f"Found {len(cross_points)} points above threshold")
 
     if len(cross_points) > 0:
         points_array = np.array(cross_points)  # shape = (N, 2)
@@ -90,7 +87,6 @@ def cross_position(picture_grid_denoised, percentile):
         center_x = np.mean(points_array[:, 0])
         center_y = np.mean(points_array[:, 1])
         
-        print(f"Center point: x = {center_x:.2f}, y = {center_y:.2f}")
     else:
         print("No points found above threshold.")
     

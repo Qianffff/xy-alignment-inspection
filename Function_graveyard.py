@@ -64,3 +64,11 @@ def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width_x=
         score_refined[j] = np.mean((img-img_no_noise)**2)
     best_angle = angles_refined[np.argmin(score_refined)]
     return best_angle
+
+# if __name__ == "__main__":
+#     # Angle of the cross
+#     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24,percentile=intensity_threshold)
+#     if rotation_find_boolean == True:
+#         found_rotation = find_rotation(black_white_grid,shift_real_x,shift_real_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
+#         print(f"Found rotation = {found_rotation}")
+#         print(f"Angle error = {found_rotation-rotation:.2f}")

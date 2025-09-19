@@ -47,6 +47,9 @@ if show_plots == True:
     plt.show(block=False)
     plt.pause(0.5)
     
+    # Plotting the white and black image
+    black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24,percentile=intensity_threshold)
+
     # Plotting the denoised
     plt.figure(figsize=(12,12))
     plt.imshow(picture_grid_denoised)
@@ -57,3 +60,4 @@ if show_plots == True:
     plt.tight_layout()
     plt.show(block=True)
     plt.pause(0.5)
+

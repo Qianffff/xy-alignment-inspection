@@ -86,12 +86,7 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
     pixels_y = np.shape(real_image)[0]
     picture_grid = np.zeros((pixels_x, pixels_y))
     expected_number_of_secondary_electrons = np.zeros((pixels_x, pixels_y))
-    
-    # Calculate the beam width given the beam current
-    FWHM = 8e-9 # (in m)
-    sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
-    sigma = sigma/pixel_width_x # (in px)
-    half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
+
     
     #Defines the direction in which the beam drift occurs
     random_angle = np.random.uniform(0,2*np.pi)

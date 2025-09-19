@@ -47,6 +47,12 @@ if pixels_x % 2 == 0:
 if pixels_y % 2 == 0:
     pixels_y += 1
 
+# Calculate the beam width given the beam current
+FWHM = 8e-9 # (in m)
+sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
+sigma = sigma/pixel_width_x # (in px)
+half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
+
 # To model beam alignment error, the position of the center of the beam is normally distributed 
 # around the position of the targeted pixel, with standard deviation error_std (in m).
 error_std = 8e-9 # (8e-9 is a guess based on the breakdown of the sources of alignment error)

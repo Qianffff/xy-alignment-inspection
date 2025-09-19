@@ -64,19 +64,19 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # First: create the cross in the middle of the grid
     # Create the vertical line
     grid[cross_pixel_top_side:cross_pixel_bottom_side,
-         cross_pixel_half_width_minus:cross_pixel_half_width_plus] += 1
+         cross_pixel_half_width_minus:cross_pixel_half_width_plus] += SE_yield_cross
     grid[cross_pixel_top_side+1:cross_pixel_bottom_side-1,
-         cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1] -= 0.5
+         cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1] -= SE_yield_cross/2
     # Create the horizontal line
     grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
-         cross_pixel_left_side:cross_pixel_right_side] += 1
+         cross_pixel_left_side:cross_pixel_right_side] += SE_yield_cross
     grid[cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1,
-         cross_pixel_left_side+1:cross_pixel_right_side-1] -= 0.5
+         cross_pixel_left_side+1:cross_pixel_right_side-1] -= SE_yield_cross/2
     # Remove doubly counted region
     grid[cross_pixel_half_width_minus:cross_pixel_half_width_plus,
-         cross_pixel_half_width_minus:cross_pixel_half_width_plus] -= 1
+         cross_pixel_half_width_minus:cross_pixel_half_width_plus] -= SE_yield_cross
     grid[cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1,
-         cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1] += 0.5
+         cross_pixel_half_width_minus+1:cross_pixel_half_width_plus-1] += SE_yield_cross/2
 
 
 
@@ -94,7 +94,7 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
     # Fourth: add noise in background
     # Use the first to have some randomness, and the second for a constant yield
     if background_noise == True:
-        grid += np.random.random([pixels_x,pixels_y])*0.5
+        grid += np.random.random([pixels_x,pixels_y])*background_noise_level
 
     return grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation
 
@@ -140,12 +140,8 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
         if int(np.round(i/pixels_x*100000)) % 5000 == 0:
             print(str(int(np.round(i/pixels_x*100)))+str("%"),end=" ")
 
-    # Multiply by number of primary electrons per second (= beam current / e) and scan time
-    e = 1.60217663e-19 # electron charge (in Coulomb)
-    # Fraction of SEs that successfully leave the surface (and will subsequently be detected)
-    escape_factor = 0.1
     
-    expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel * escape_factor
+    expected_number_of_secondary_electrons *= beam_current/e * scan_time_per_pixel * escape_factor * collector_efficiency
     # If there is no background noise, some numbers may become smaller than 0.
     # This gives an error in the upcoming Poisson function
     expected_number_of_secondary_electrons[expected_number_of_secondary_electrons<0] = 0
@@ -386,11 +382,20 @@ if __name__ == "__main__":
 # ===================== Parameters =====================
     # Beam current (in A)
     beam_current = 0.2e-9
+    e = 1.60217663e-19 # electron charge (in Coulomb)
+    # Fraction of SEs that successfully leave the surface (and will subsequently be detected)
+    escape_factor = 0.2
+    collector_efficiency = 0.8
+    background_noise_level = 0.8 # SE yield of background * 2
+    SE_yield_cross = 1 # SE yield without background SE yield
+    SE_yield = background_noise_level/2 + SE_yield_cross
     # Scan time per pixel (in s) (inverse of the scan rate)
-    scan_time_per_pixel = 0.05e-6*3
+
+    SNR = 5
+    scan_time_per_pixel = SNR**2/(SE_yield * escape_factor * collector_efficiency * (beam_current/e))
     
     # Pixel size (in m)
-    pixel_width_x = 20*1e-9
+    pixel_width_x = 15*1e-9
     pixel_width_y = pixel_width_x
     
     # Pixel size of (real) original image (not really a pixel,since approximates reality) (in m)
@@ -412,13 +417,15 @@ if __name__ == "__main__":
     # Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
     # Dimensions in meter
     cross_length = 200e-9
-    cross_line_width = 28e-9 # (14e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
+    cross_line_width = 30e-9 # (15e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
     
+    
+
     show_plots = True
     rotation_find_boolean = False
 
     simulation_runs=0
-    intensity_threshold=0.9
+    intensity_threshold=0.95
 # ===================== Process image =====================
 
     # Histogram of errors in detected positions
@@ -518,7 +525,7 @@ if __name__ == "__main__":
         plt.pause(0.5)
 
         #Plot the Gaussian kernel
-        plot_kernel(half_pixel_width_gaussian_kernel,sigma)
+        #plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
         # Plotting of the meassured SEM image
         plt.figure(figsize=(12,12))

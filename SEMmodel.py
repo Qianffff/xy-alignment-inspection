@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import rotate, shift
 from skimage.restoration import denoise_nl_means, estimate_sigma
 import cv2
+from skimage.measure import block_reduce
 
 """
 The chip and all its features (like edges and alignment marks) are modeled using a grid. The grid 
@@ -97,6 +98,17 @@ def real_image(pixel_width_x=2e-9,pixel_width_y=2e-9,frame_width_x=1e-6,frame_wi
 
     return grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation
 
+def calculate_original_pixel_size(new_pixel_size_nm,original_pixel_size_nm_maximum):
+    original_pixel_size_nm = new_pixel_size_nm
+    while original_pixel_size_nm > original_pixel_size_nm_maximum:
+        original_pixel_size_nm = original_pixel_size_nm/2
+    return original_pixel_size_nm
+
+def resample_image_by_pixel_size(img, original_pixel_size_nm, new_pixel_size_nm):
+    factor = int(np.round(new_pixel_size_nm/original_pixel_size_nm))
+    downsampled_img = block_reduce(img,block_size=(factor,factor),func=np.mean)
+    return downsampled_img
+
 def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,scan_time_per_pixel=4e-7,error_std=8e-9):
     # Calculate the expected number of SE per pixel
     pixels_x = np.shape(real_image)[0]
@@ -113,8 +125,9 @@ def measured_image(real_image,pixel_width_x,pixel_width_y,beam_current=500e-12,s
     
     
     for i in range(pixels_x):
+
         for j in range(pixels_y):
-            # Random beam position error in x and y direction (in pixels)
+            # Random beam landing position error in x and y direction (in pixels)
             error_shift_x = np.random.normal(scale=error_std) / pixel_width_x
             error_shift_y = np.random.normal(scale=error_std) / pixel_width_y
             # Create kernel
@@ -374,14 +387,22 @@ if __name__ == "__main__":
     # Beam current (in A)
     beam_current = 0.2e-9
     # Scan time per pixel (in s) (inverse of the scan rate)
-    scan_time_per_pixel = 0.05e-6
+    scan_time_per_pixel = 0.05e-6*3
     
     # Pixel size (in m)
-    pixel_width_x = np.sqrt(2.5)*1e-9
+    pixel_width_x = 20*1e-9
     pixel_width_y = pixel_width_x
     
+    # Pixel size of (real) original image (not really a pixel,since approximates reality) (in m)
+    pixel_width_real_x_max = 5*1e-9
+    pixel_width_real_y_max = 5*1e-9
+    pixel_width_real_x = calculate_original_pixel_size(pixel_width_x,pixel_width_real_x_max)
+    pixel_width_real_y = calculate_original_pixel_size(pixel_width_y,pixel_width_real_y_max)
+
+    resize_factor = int(np.round(pixel_width_x/pixel_width_real_x))
+
     # Frame width (in m)
-    frame_width_x = 0.3*1e-6
+    frame_width_x = 8*1e-6
     frame_width_y = frame_width_x
     
     # To model beam alignment error, the position of the center of the beam is normally distributed 
@@ -397,7 +418,7 @@ if __name__ == "__main__":
     rotation_find_boolean = False
 
     simulation_runs=0
-    intensity_threshold=0.6
+    intensity_threshold=0.9
 # ===================== Process image =====================
 
     # Histogram of errors in detected positions
@@ -406,9 +427,12 @@ if __name__ == "__main__":
     for i in range(simulation_runs):  
         print(i)          
         # Generate wafer image
-        grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
+        grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_real_x,pixel_width_real_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
         print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
         print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
+
+        # Resize image to go from real/original pixel width to measure pixel width
+        grid = resample_image_by_pixel_size(grid, pixel_width_real_x, pixel_width_x)
 
         # Use Gaussian distribution to meassure image
         picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
@@ -442,31 +466,34 @@ if __name__ == "__main__":
         #    for item in displacements:
         #        file.write(str(item) + '\n')
    
-    print('Mean error = ', np.mean(displacements))
-    print('Standard deviation of error = ', np.std(displacements))
+        print('Mean error = ', np.mean(displacements))
+        print('Standard deviation of error = ', np.std(displacements))
 
 
 
 
     # Generate wafer image
-    grid, pixel_width_x, pixel_width_y, pixels_x, pixels_y, shift_x, shift_y, rotation = real_image(pixel_width_x,pixel_width_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
-    print(f"Cross middle x pixel = {int(np.round(pixels_x/2+shift_x))}")
-    print(f"Cross middle y pixel = {int(np.round(pixels_y/2+shift_y))}")
+    grid, pixel_width_real_x, pixel_width_real_y, pixels_real_x, pixels_real_y, shift_real_x, shift_real_y, rotation = real_image(pixel_width_real_x,pixel_width_real_y,frame_width_x,frame_width_y,cross_length,cross_line_width)  
+    print(f"Cross middle x real pixel = {int(np.round(pixels_real_x/2+shift_real_x))}")
+    print(f"Cross middle y real pixel = {int(np.round(pixels_real_y/2+shift_real_y))}")
     print(f"Rotation = {rotation:.3f}")
 
+    # Resize image to go from real/original pixel width to measure pixel width
+    grid_resampled = resample_image_by_pixel_size(grid, pixel_width_real_x, pixel_width_x)
+
     # Use Gaussian distribution to meassure image
-    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
+    picture_grid, half_pixel_width_gaussian_kernel, sigma = measured_image(grid_resampled, pixel_width_x, pixel_width_y, beam_current, scan_time_per_pixel)
 
     # Denoise the image
     picture_grid_denoised = denoise_image(picture_grid)
 
     # Position of the cross
-    centerx, centery, cross_points =cross_position(picture_grid_denoised,intensity_threshold)
+    centerx, centery, cross_points = cross_position(picture_grid_denoised,intensity_threshold)
     # Difference between calculated cross center position and actual position (in m)
-    absolute_distance_error = np.linalg.norm([int(np.round(pixels_x/2+shift_x)) - centerx,int(np.round(pixels_y/2+shift_y)) - centery])*pixel_width_x
+    absolute_distance_error = np.linalg.norm([int(np.round(pixels_real_x/2+shift_real_x)) - centerx*resize_factor,int(np.round(pixels_real_y/2+shift_real_y)) - centery*resize_factor])*pixel_width_real_x
 
     # Listing some values of variables used in the simulation
-    time_to_make_picture = pixels_x*pixels_y*scan_time_per_pixel
+    time_to_make_picture = (pixels_real_x/resize_factor)*(pixels_real_y/resize_factor)*scan_time_per_pixel
     print(f"Time to make image = {time_to_make_picture:.5f} seconds")
     print(f"Scan time per pixel = {scan_time_per_pixel*1e6:.5f} µs")
     print(f"Absolute distance error = {absolute_distance_error*1e9:.3f} nm")
@@ -476,7 +503,7 @@ if __name__ == "__main__":
     # Angle of the cross
     black_white_grid = detect_and_plot_harris_corners(picture_grid_denoised,dot_radius=1,dot_alpha=0.25,k=0.24,percentile=intensity_threshold)
     if rotation_find_boolean == True:
-        found_rotation = find_rotation(black_white_grid,shift_x,shift_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
+        found_rotation = find_rotation(black_white_grid,shift_real_x,shift_real_y,cross_length=cross_length,cross_width=cross_line_width,frame_width_x=frame_width_x,frame_width_y=frame_width_y)
         print(f"Found rotation = {found_rotation}")
         print(f"Angle error = {found_rotation-rotation:.2f}")
     
@@ -491,7 +518,7 @@ if __name__ == "__main__":
         plt.pause(0.5)
 
         #Plot the Gaussian kernel
-        #plot_kernel(half_pixel_width_gaussian_kernel,sigma)
+        plot_kernel(half_pixel_width_gaussian_kernel,sigma)
 
         # Plotting of the meassured SEM image
         plt.figure(figsize=(12,12))

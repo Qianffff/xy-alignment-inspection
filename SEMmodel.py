@@ -6,7 +6,7 @@ from Function_graveyard import *
 from Variables_and_constants import *
 
 # Generate wafer image
-grid, cross_center = real_image(frame_width)  
+grid, cross_center = real_image()  
 
 # Resize image to go from real/original pixel width to measure pixel width
 grid_resampled = resample_image_by_pixel_size(grid, pixel_width)

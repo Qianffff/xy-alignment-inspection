@@ -52,14 +52,14 @@ def calculate_CNR(picture_grid,
 def find_rotation(img, x, y,cross_length=100e-9,cross_width=14e-9,frame_width=1e-6):
     score = np.zeros(90)
     for i in np.arange(0,90):
-        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=i,background_noise=False)[0]
+        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=i)[0]
         # img_no_noise = img_no_noise/np.max(img_no_noise)
         score[i] = np.mean((img-img_no_noise)**2)
     best_i = np.argmin(score)
     angles_refined = np.arange(best_i-2.5,best_i+2.5,0.01)
     score_refined = np.zeros(np.shape(angles_refined))
     for j,angle in enumerate(angles_refined):
-        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=angle,background_noise=False)[0]
+        img_no_noise = real_image(cross_length=cross_length,cross_line_width=cross_width,shift_x=x,shift_y=y,rotation=angle)[0]
         # img_no_noise = img_no_noise/np.max(img_no_noise)
         score_refined[j] = np.mean((img-img_no_noise)**2)
     best_angle = angles_refined[np.argmin(score_refined)]

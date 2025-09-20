@@ -10,7 +10,7 @@ displacements = []
 for i in range(simulation_runs):  
     print(i)          
     # Generate wafer image
-    grid, cross_center = real_image(frame_width)  
+    grid, cross_center = real_image()  
     print(f"Cross middle x pixel = {int(np.round(cross_center[0]/pixel_width))}")
     print(f"Cross middle y pixel = {int(np.round(cross_center[1]/pixel_width))}")
 

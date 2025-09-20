@@ -2,7 +2,7 @@ import numpy as np
 
 # ===================== Parameters =====================
 
-frame_width = 1*1e-6 # Frame width (in m)
+frame_width = 2*1e-6 # Frame width (in m)
 pixel_width = 20*1e-9 # Pixel size (in m)
 SNR = 10 # Desired signal to noise ratio
 
@@ -11,8 +11,8 @@ SNR = 10 # Desired signal to noise ratio
 # For each step of the alignment procedure, define the frame_width (in m), pixel_width (in m), and desired SNR.
 # The parameter 'frame_width' defined above should match the framewidth of the first step of the procedure.
 # Format: [frame_width,pixel_width,SNR]
-step1 = [1*1e-6,20*1e-9,5]
-step2 = [0.5*1e-6,5*1e-9,10]
+step1 = [2*1e-6,20*1e-9,10]
+step2 = [1*1e-6,5*1e-9,100]
 procedure = [step1,step2]
 
 
@@ -35,7 +35,7 @@ FWHM = 8e-9 # Full width half maximum of the electron beam (in m)
 
 # To model beam alignment error, the position of the center of the beam is normally distributed 
 # around the position of the targeted pixel, with standard deviation error_std (in m).
-error_std = 8e-9 # (8e-9 is a guess based on the breakdown of the sources of alignment error)
+beam_placement_error_std = 8*1e-9 # (8*1e-9 is a guess based on the breakdown of the sources of alignment error)
 
 drift_rate = 5*1e-9/60 # Beam drift rate (in m/s).
 FOV_count = 1 # (Minimum is 1.) Number of FOVs the beam has scanned already. Used to calculate how much beam drift has accumulated.
@@ -47,11 +47,6 @@ cross_linewidth = 30*1e-9 # (15e-9 assumed to be critical dimension (CD), i.e. t
 
 # Pixel size of real image (not really a pixel, since it approximates reality) (in m)
 pixel_width_real = 1*1e-9
-# Is this necessary?
-# pixel_width_real_max = 1e-9
-# pixel_width_real = pixel_width
-# while pixel_width_real > pixel_width_real_max:
-#     pixel_width_real = pixel_width_real/2
 
 
 
@@ -70,8 +65,8 @@ if pixels % 2 == 0: pixels += 1
 # Calculate the beam width given the beam current
 sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
 sigma = sigma/pixel_width # (in px)
-half_pixel_width_gaussian_kernel = int(np.ceil(3*sigma)) # (in px)
+kernel_width = int(2 * np.ceil(3*sigma) + 1) # (in px)
 
-show_plots = False
+show_plots = True
 
 simulation_runs=0 # For SEM simulation histogram

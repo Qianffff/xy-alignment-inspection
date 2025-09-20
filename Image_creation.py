@@ -78,38 +78,47 @@ def resample_image_by_pixel_size(grid, pixel_width):
     downsampled_grid = downsampled_grid[:-1,:-1] # Remove edge effects due to the downsampling
     return downsampled_grid
 
-def measured_image(real_image,pixel_width,SNR):
+def measure_image(grid,pixel_width,SNR):
     
     # Resample to go from the real pixel size to the measured image pixel size
-    image = resample_image_by_pixel_size(real_image, pixel_width)
-    
-    scan_time_per_pixel = SNR**2/(SE_yield*escape_factor*collector_efficiency * (beam_current/e))
+    image = resample_image_by_pixel_size(grid, pixel_width)
     
     # Initiate grid of expected number of SEs
     pixels = np.shape(image)[0]
-    picture_grid = np.zeros((pixels, pixels))
     expected_number_of_secondary_electrons = np.zeros((pixels, pixels))
 
     # Define the direction in which beam drift occurs
-    random_angle = np.random.uniform(0,2*np.pi)
+    beam_drift_angle = np.random.uniform(0,2*np.pi)
+    # Calculate scan time per pixel (needed for calculating how much beam drift has occured)
+    scan_time_per_pixel = SNR**2/(SE_yield*escape_factor*collector_efficiency * (beam_current/e))
     
     for i in range(pixels):
         for j in range(pixels):
-            # Random beam landing position error in x and y direction (in pixels)
-            error_shift_x = (np.random.normal(scale=error_std) + np.cos(random_angle)*np.abs((np.random.normal(scale=(i*pixels + j + (FOV_count-1) * pixels**2) * (drift_rate * scan_time_per_pixel))))) / pixel_width 
-            error_shift_y = (np.random.normal(scale=error_std) + np.sin(random_angle)*np.abs((np.random.normal(scale=(i*pixels + j + (FOV_count-1) * pixels**2) * (drift_rate * scan_time_per_pixel))))) / pixel_width 
+            
+            # Create a random beam position error (in m). This error is made up of two parts:
+            # the beam placement error with std = beam_placement_error_std, and the beam drift.
+            beam_placement_error_angle = np.random.uniform(0,2*np.pi)
+            beam_position_error = np.random.normal(scale=beam_placement_error_std)*np.array([np.cos(beam_placement_error_angle),np.sin(beam_placement_error_angle)])
+            beam_drift = np.abs((np.random.normal(scale=((FOV_count-1)*pixels**2 + i*pixels + j) * (scan_time_per_pixel * drift_rate))))
+            beam_position_error += beam_drift*np.array([np.cos(beam_drift_angle),np.sin(beam_drift_angle)])
+            
+            beam_position_error /= pixel_width # Convert from meters to pixels
+            # Split the beam position error into two parts: the number of full pixels and the rest
+            error_pixels = np.trunc(beam_position_error)
+            error_rest = beam_position_error - error_pixels
+            
             # Create kernel
-            kernel_ij, i_shift, j_shift = gauss_kernel(2*half_pixel_width_gaussian_kernel+1,
-                                     sigma,error_shift_x,error_shift_y)
-            i_convolve, j_convolve = int(np.round(i+i_shift)), int(np.round(j+j_shift))
-            if i+i_shift < 0: i_convolve = 0
-            if i+i_shift > pixels-1: i_convolve = pixels - 1
-            if j+j_shift < 0: j_convolve = 0
-            if j+j_shift > pixels-1: j_convolve = pixels - 1
+            kernel_ij = gauss_kernel(kernel_width,sigma,error_rest)
+            # Define the pixel that is at the kernel is at the center of the convolution
+            convolve_pixel = np.array([i,j]) + error_rest
+            if i + error_pixels[0] < 0: convolve_pixel[0] = 0
+            if i + error_pixels[0] > pixels-1: convolve_pixel[0] = pixels - 1
+            if j + error_pixels[1] < 0: convolve_pixel[1] = 0
+            if j + error_pixels[1] > pixels-1: convolve_pixel[1] = pixels - 1
 
             # Perform the convolution
-            expected_number_of_secondary_electrons[i, j] = convolve_at_pixel(
-                image, kernel_ij, i_convolve, j_convolve)
+            expected_number_of_secondary_electrons[i,j] = convolve_at_pixel(image,kernel_ij,convolve_pixel)
+        
         # Progress bar
         if int(np.round((i-1)/pixels*100)) % 5 != 0:
             if int(np.round(i/pixels*100)) % 5 == 0:
@@ -123,7 +132,6 @@ def measured_image(real_image,pixel_width,SNR):
     # This gives an error in the upcoming Poisson function
     expected_number_of_secondary_electrons[expected_number_of_secondary_electrons<0] = 0
 
-
-    # Simulate detected electrons using Poisson statistics
-    picture_grid = np.random.poisson(expected_number_of_secondary_electrons)
-    return picture_grid
+    # Add shot noise
+    measured_image = np.random.poisson(expected_number_of_secondary_electrons)
+    return measured_image

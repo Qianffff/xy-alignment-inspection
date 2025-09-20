@@ -2,53 +2,41 @@ import numpy as np
 from Variables_and_constants import *
 
 # Define the function which generates the Gauss kernel that is used in the convolution
-def shifted_gauss1d(gauss_pixels,sigma,shift):
-    x = np.arange(gauss_pixels)
-    center = (gauss_pixels - 1) / 2 + shift  # shifted center
-    return np.exp(-0.5 * ((x - center) / sigma) ** 2)
+def shifted_gauss1d(kernel_width,sigma,shift):
+    x = np.arange(kernel_width)
+    center = (kernel_width-1)/2 + shift  # shifted center
+    return np.exp(-0.5*((x-center)/sigma)**2)
 
-def gauss_kernel(gauss_pixels,sigma,shift_x=0,shift_y=0):
-    shift_x_rest = shift_x - np.trunc(shift_x)
-    shift_y_rest = shift_y - np.trunc(shift_y)
-    shift_x_pixel = np.trunc(shift_x)
-    shift_y_pixel = np.trunc(shift_y)
-    gauss1d_x = shifted_gauss1d(gauss_pixels,sigma,shift_x_rest)
-    gauss1d_y = shifted_gauss1d(gauss_pixels,sigma,shift_y_rest)
+# Create the kernel
+def gauss_kernel(kernel_width,sigma,shift):
+    gauss1d_x = shifted_gauss1d(kernel_width,sigma,shift[0])
+    gauss1d_y = shifted_gauss1d(kernel_width,sigma,shift[1])
     kernel = np.outer(gauss1d_x, gauss1d_y)
-    if kernel.sum() > 0:
-        kernel = kernel / kernel.sum()
-    if kernel.sum() == 0:
-        kernel = kernel
-    return kernel, shift_x_pixel, shift_y_pixel
+    if kernel.sum() != 0: kernel /= kernel.sum() # Normalize
+    return kernel
 
-# The standard functions in scipy/numpy implemented the convolution function
-# to perform the convolution on the entire array, while we want to do it on a 
-# per pixel basis since we have a different kernel for each pixel (to simulate beam position error).
-def convolve_at_pixel(grid, kernel, i, j):
-    kh, kw = kernel.shape # kernel height and width
-    ph, pw = kh // 2, kw // 2  # patch height and width
+def convolve_at_pixel(grid, kernel,pixel):
+    kernel_width = kernel.shape[0] # kernel width (in pixels)
+    kernel_halfwidth = int(np.round((kernel_width-1)/2))
+    grid_width = grid.shape[0] # grid width (in pixels)
     
-    # Grid dimensions
-    h, w = grid.shape
-
-    # Compute the bounds of the patch in the grid, taking into account the 
-    # left, right, bottom and top boundary
-    i_start = max(i - ph, 0)
-    i_end   = min(i + ph, h)
-
-    j_start = max(j - pw, 0)
-    j_end   = min(j + pw, w)
-    
+    # Compute the bounds of the patch in the grid, taking into account the left, right, top, and bottom boundary
+    i,j = pixel
+    patch_start_x = max(i - kernel_halfwidth, 0)
+    patch_end_x   = min(i + kernel_halfwidth, grid_width-1)
+    patch_start_y = max(j - kernel_halfwidth, 0)
+    patch_end_y   = min(j + kernel_halfwidth, grid_width-1)
     # Extract the patch from the grid
-    patch = grid[i_start:i_end, j_start:j_end]
+    patch = grid[int(np.round(patch_start_x)) : int(np.round(patch_end_x+1)),
+                 int(np.round(patch_start_y)) : int(np.round(patch_end_y+1))]
+    # Now crop the kernel to match the patch
+    kernel_start_x =  patch_start_x - (i - kernel_halfwidth)
+    kernel_end_x   = kernel_start_x + patch.shape[0] -1
 
-    # Now crop the kernel accordingly to match the patch
-    k_i_start = ph - (i - i_start)
-    k_i_end   = k_i_start + patch.shape[0] 
-
-    k_j_start = pw - (j - j_start)
-    k_j_end   = k_j_start + patch.shape[1]
-    kernel_cropped = kernel[k_i_start:k_i_end, k_j_start:k_j_end]
+    kernel_start_y = patch_start_y - (j - kernel_halfwidth)
+    kernel_end_y   = kernel_start_y + patch.shape[1] -1
+    kernel_cropped = kernel[int(np.round(kernel_start_x)):int(np.round(kernel_end_x+1)),
+                            int(np.round(kernel_start_y)):int(np.round(kernel_end_y+1))]
 
     kernel_cropped = kernel_cropped/kernel_cropped.sum()
     # Elementwise multiply and sum

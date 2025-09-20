@@ -14,17 +14,11 @@ for i in range(simulation_runs):
     print(f"Cross middle x pixel = {int(np.round(cross_center[0]/pixel_width))}")
     print(f"Cross middle y pixel = {int(np.round(cross_center[1]/pixel_width))}")
 
-    # Resize image to go from real/original pixel width to measure pixel width
-    grid = resample_image_by_pixel_size(grid, pixel_width)
-
     # Use Gaussian distribution to meassure image
-    picture_grid = measured_image(grid, pixel_width,SNR)
-
-    # Denoise the image
-    picture_grid_denoised = denoise_image(picture_grid)
-
+    picture_grid = measure_image(grid, pixel_width,SNR)
+    
     # Position of the cross
-    cross_center_measured_px = cross_position(picture_grid_denoised,intensity_threshold)
+    cross_center_measured_px = cross_position(denoise_image(picture_grid),intensity_threshold)
     cross_center_measured = cross_center_measured_px * pixel_width # Convert from pixels to meters  
     # Compute displacement (in nm)
     displacement = np.linalg.norm([cross_center[0] - cross_center_measured[0], cross_center[1] - cross_center_measured[1]]) * 1e9

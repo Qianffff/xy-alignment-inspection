@@ -4,10 +4,10 @@ from Image_creation import *
 from Variables_and_constants import *
 
 
-def plot_kernel(half_pixel_width_gaussian_kernel,sigma,shift_x=0,shift_y=0):
+def plot_kernel(kernel_halfwidth_px,sigma,shift_x=0,shift_y=0):
     # Plot the kernel
     plt.figure()
-    plt.imshow(gauss_kernel(half_pixel_width_gaussian_kernel*2+1, sigma,shift_x,shift_y))
+    plt.imshow(gauss_kernel(kernel_halfwidth_px*2+1, sigma,shift_x,shift_y))
     plt.title('Beam profile')
     plt.xlabel('px')
     plt.ylabel('px')

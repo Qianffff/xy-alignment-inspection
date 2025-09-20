@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+from Denoise_functions import *
 from Variables_and_constants import *
 
 def detect_and_plot_harris_corners(
@@ -70,26 +71,17 @@ def detect_and_plot_harris_corners(
         plt.pause(0.1)
     return denoised_grid
 
-def cross_position(picture_grid_denoised, percentile):
-    # Calculate threshold value based on specified percentile
-    threshold_value = np.max(picture_grid_denoised)*percentile
+def cross_position(image,threshold):
     
-    # Find coordinates where array values exceed the threshold
-    # np.where returns (y_coordinates, x_coordinates)
-    y_coords, x_coords = np.where(picture_grid_denoised > threshold_value)
+    image = denoise_image(image) # Denoise image
     
-    # Convert to list of (x, y) coordinate tuples
-    cross_points = list(zip(x_coords, y_coords))
+    threshold_value = np.max(image)*threshold # Calculate threshold value
+    x_coords, y_coords = np.where(image > threshold_value) # Find coordinates where array values exceed the threshold
 
-    if len(cross_points) > 0:
-        points_array = np.array(cross_points)  # shape = (N, 2)
-        
+    if len(x_coords) != 0:
         # Calculate the center of the cross (in pixels)
-        center_x = np.mean(points_array[:, 0])
-        center_y = np.mean(points_array[:, 1])
-        cross_center_measured_px = np.array([center_x,center_y])
-        
+        cross_center = np.array([np.mean(x_coords),np.mean(y_coords)])
     else:
         print("No points found above threshold.")
-        
-    return cross_center_measured_px
+    
+    return cross_center

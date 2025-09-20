@@ -2,17 +2,15 @@ import numpy as np
 
 # ===================== Parameters =====================
 
-SNR = 10
+frame_width = 1*1e-6 # Frame width (in m)
 pixel_width = 20*1e-9 # Pixel size (in m)
-
-# Frame width (in m)
-frame_width = 1*1e-6
+SNR = 10 # Desired signal to noise ratio
 
 # ============ Simulate alignment procedure ============
 # An alignment procedure is a sequence of scans that determine the mark position with increasing accuracy.
 # For each step of the alignment procedure, define the frame_width (in m), pixel_width (in m), and desired SNR.
 # Format: [frame_width,pixel_width,SNR]
-step1 = [1e-6,20e-9,10]
+step1 = [1e-6,20e-9,5]
 step2 = [0.5e-6,5e-9,10]
 procedure = [step1,step2]
 
@@ -43,12 +41,14 @@ cross_length = 200e-9
 cross_line_width = 30e-9 # (15e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
 
 # Pixel size of real image (not really a pixel, since it approximates reality) (in m)
-pixel_width_real_max = 1e-9
 
-# Why is this necessary?
+pixel_width_real = 1e-9
+# Is this necessary?
+# pixel_width_real_max = 1e-9
 # pixel_width_real = pixel_width
 # while pixel_width_real > pixel_width_real_max:
 #     pixel_width_real = pixel_width_real/2
+
 
 
 # ===================== Derived parameters =====================

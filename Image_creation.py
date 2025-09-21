@@ -67,7 +67,7 @@ def real_image():
     # Define the position of the center of the cross relative to the top-left corner of the image (in m)
     cross_center_x = int(np.round(center_pixel+cross_shift[0]))*pixel_width_real
     cross_center_y = int(np.round(center_pixel+cross_shift[1]))*pixel_width_real
-    cross_center = [cross_center_x,cross_center_y]
+    cross_center = np.array([cross_center_x,cross_center_y])
 
     return grid, cross_center
 
@@ -123,9 +123,7 @@ def measure_image(grid,pixel_width,SNR):
         if int(np.round((i-1)/pixels*100)) % 5 != 0:
             if int(np.round(i/pixels*100)) % 5 == 0:
                 print(str(int(np.round(i/pixels*100)))+str("%"),end=" ")
-                
-    print("\n")
-    
+    print()
     expected_number_of_secondary_electrons *= (beam_current/e) * scan_time_per_pixel * escape_factor*collector_efficiency
     
     # If there is no background noise, some numbers may become smaller than 0.

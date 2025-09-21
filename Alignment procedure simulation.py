@@ -18,31 +18,42 @@ def simulate(procedure):
     step = 0 # Current step
     while step <= steps:
         frame_width, pixel_width, SNR = procedure[step] # Get the frame_width, pixel_width and SNR for the current step
-        # Narrow the scanning area (except when it's the first step)
-        if step != 0:
-            frame_halfwidth = frame_width/pixel_width_real/2 # in pixels
-            zoomed_grid = grid[int(np.round(max(0,cross_center_measured_px[0]-frame_halfwidth))):
-                          int(np.round(min(pixels_real,cross_center_measured_px[0]+frame_halfwidth)))+1,
-                          int(np.round(max(0,cross_center_measured_px[1]-frame_halfwidth))):
-                          int(np.round(min(pixels_real,cross_center_measured_px[1]+frame_halfwidth)))+1]
-        else: zoomed_grid = grid
+        # Zoom in (except for the first step)
+        if step == 0:
+            zoomed_grid = grid # No zooming happens in the first step
+            origin_shift = np.array([0,0]) # Origin doesn't shift in the first step
+        else:
+            # Zoom in around the cross position that was found in the previous step
+            frame_halfwidth = frame_width/pixel_width_real/2 # in real pixels
+            zoomed_grid = grid[int(np.round(max(0,cross_center_measured_rlpx[0]-frame_halfwidth))):
+                          int(np.round(min(pixels_real,cross_center_measured_rlpx[0]+frame_halfwidth)))+1,
+                          int(np.round(max(0,cross_center_measured_rlpx[1]-frame_halfwidth))):
+                          int(np.round(min(pixels_real,cross_center_measured_rlpx[1]+frame_halfwidth)))+1]
+            # Define the origin of current frame relative to the origin of the real grid (in real pixels)
+            origin_shift = np.array([int(np.round(max(0,cross_center_measured_rlpx[0]-frame_halfwidth))),int(np.round(max(0,cross_center_measured_rlpx[1]-frame_halfwidth)))])
+            
+            # Slice the grid to make it square (It should still have the cross in it, but I'm not sure it currently always does)
+            x,y = np.shape(zoomed_grid)
+            if x > y:
+                zoomed_grid = zoomed_grid[int((x-y)/2):int((x+y)/2),:]
+                origin_shift += np.array([int((x-y)/2),0]) # Update the origin shift
+            elif y > x:
+                zoomed_grid = zoomed_grid[:,int((y-x)/2):int((x+y)/2)]
+                origin_shift += np.array([0,int((y-x)/2)]) # Updat the origin shift
         
         # Simulate the scanning of the image with the e-beam
         measured_image = measure_image(zoomed_grid,pixel_width,SNR)
         
-        # Calculate the position of the center of the cross
-        cross_center_measured_px = cross_position(measured_image,intensity_threshold)
+        # Calculate the position of the center of the cross (in image pixels)
+        cross_center_measured_impx = cross_position(measured_image,intensity_threshold)
+        cross_center_measured_rlpx = cross_center_measured_impx * (pixel_width/pixel_width_real) # Convert from image pixels to real pixels
+        cross_center_measured_rlpx += origin_shift # Convert from image coordinates to real coordinates
         
-        if step != 0:
-            # Position of the origin of the zoomed grid relative to the previous grid (in pixels)
-            zoomed_grid_origin = np.array([int(np.round(max(0,cross_center_measured_px[0]-frame_halfwidth))),int(np.round(max(0,cross_center_measured_px[1]-frame_halfwidth)))])
-            # Translate cross position from image coordinates to wafer coordinates
-            cross_center_measured_px += zoomed_grid_origin * (pixel_width/pixel_width_real)
-        
-        cross_center_measured = cross_center_measured_px * pixel_width # Convert from pixels to meters
+        cross_center_measured = cross_center_measured_rlpx * pixel_width_real # Convert from pixels to meters
         # Difference between calculated cross center position and actual position (in m)
         error = np.linalg.norm([cross_center[0] - cross_center_measured[0], cross_center[1] - cross_center_measured[1]])
         print(f"Error = {error*1e9:.3f} nm")
+        print()
         
         # ===================== Plot =====================
         if show_plots == True:
@@ -51,7 +62,7 @@ def simulate(procedure):
             plt.imshow(denoise_image(measured_image))
             plt.title('Simulated SEM image denoised')
             plt.colorbar()
-            plt.scatter(cross_center_measured_px[1], cross_center_measured_px[0], c='red', marker='+', s=200, label='Center')
+            plt.scatter(cross_center_measured_impx[1], cross_center_measured_impx[0], c='red', marker='+', s=200, label='Measured center')
             plt.legend()
             plt.tight_layout()
             plt.show(block = step==steps)

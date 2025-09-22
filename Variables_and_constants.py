@@ -19,7 +19,7 @@ procedure = [step1,step2]
 
 # ===================== Constants =====================
 
-intensity_threshold=0.8 # Used for finding the cross position
+intensity_threshold=0.7 # Used for finding the cross position
 beam_current = 0.5e-9 # Beam current (in A)
 
 e = 1.60217663e-19 # electron charge (in Coulomb)

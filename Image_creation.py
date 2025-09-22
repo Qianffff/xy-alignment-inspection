@@ -31,7 +31,7 @@ def real_image(frame_width_px = pixels_real):
     # Generate a random cross position (in pixels) and rotation (in degrees)
     max_shift = 1 # int(np.round(center_pixel - cross_arm_length_px))
     cross_shift = [int(np.random.randint(-max_shift,max_shift)),int(np.random.randint(-max_shift,max_shift))]
-    rotation = np.random.uniform(0,90)
+    rotation = 0 # np.random.uniform(0,90)
 
     # Create the cross in the middle of the grid
     # Create the vertical line

@@ -8,6 +8,10 @@ def simulate(procedure):
     frame_width = procedure[0][0]
     frame_width_px = int(np.round((frame_width/pixel_width_real))) 
     if frame_width_px % 2 == 0 : frame_width_px += 1
+    
+    pixels_real = int(frame_width/pixel_width_real)
+    if pixels_real % 2 == 0: pixels_real +=1
+    
     grid, cross_center = real_image(frame_width_px)
     
     # Plot the grid of SE yields. This represents what the real wafer pattern looks like.
@@ -50,7 +54,8 @@ def simulate(procedure):
         measured_image, time = measure_image(zoomed_grid,pixel_width,SNR)
         
         # Update the total time
-        if step == 0: time *= n_eFOVs * (ebeam_FOV_width**2/frame_width**2) + stage_overhead_time # Account for taking multiple ebeam FOV sized images in the first step to find the mark
+        if step == 0: time = time * n_eFOVs * (ebeam_FOV_width**2/frame_width**2) + stage_overhead_time + latency # Account for taking multiple ebeam FOV sized images in the first step to find the mark
+        else: time += latency
         total_time += time
         print(f"Step {step+1} time = {time*1e3:.6f} ms")
         
@@ -70,7 +75,7 @@ def simulate(procedure):
         if show_plots == True:
             # Plotting the denoised
             plt.figure(figsize=(6,6))
-            plt.imshow(denoise_image(measured_image))
+            plt.imshow(measured_image)
             plt.title('Simulated SEM image denoised')
             plt.colorbar()
             plt.scatter(cross_center_measured_impx[1], cross_center_measured_impx[0], c='red', marker='+', s=200, label='Measured center')

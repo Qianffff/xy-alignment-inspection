@@ -11,8 +11,8 @@ SNR = 10 # Desired signal to noise ratio
 # For each step of the alignment procedure, define the frame_width (in m), pixel_width (in m), and desired SNR.
 # The parameter 'frame_width' defined above should match the framewidth of the first step of the procedure.
 # Format: [frame_width,pixel_width,SNR]
-step1 = [1*1e-6,20*1e-9,5]
-step2 = [0.5*1e-6,5*1e-9,10]
+step1 = [1*1e-6,10*1e-9,10]
+step2 = [0.5*1e-6,2*1e-9,10]
 procedure = [step1,step2]
 
 
@@ -50,9 +50,11 @@ pixel_width_real = 1*1e-9
 
 # Time it takes per unit distance the beam has to go from one side of its FOV to the other to scan a new row of pixels, per meter it has to traverse (in s/m)
 beam_overhead_rate = 0.1
+# Time it takes to send SEM data to a computer, process it (i.e. find the mark), and send the result back to the SEM
+latency = (0.1 + 1 + 0.1)*1e-3
 
 # Optical microscope FOV area (in m)
-ebeam_FOV_width = 1*1e-6
+ebeam_FOV_width = 8*1e-6
 optical_microscope_FOV_width = 10*1e-6
 
 a = 2*9.81 # Maximum stage accelaration (in m/s²)

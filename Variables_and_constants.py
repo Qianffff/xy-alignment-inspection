@@ -2,7 +2,7 @@ import numpy as np
 
 # ===================== Parameters =====================
 
-frame_width = 0.5*1e-6 # Frame width (in m)
+frame_width = 1*1e-6 # Frame width (in m)
 pixel_width = 20*1e-9 # Pixel size (in m)
 SNR = 10 # Desired signal to noise ratio
 
@@ -11,8 +11,8 @@ SNR = 10 # Desired signal to noise ratio
 # For each step of the alignment procedure, define the frame_width (in m), pixel_width (in m), and desired SNR.
 # The parameter 'frame_width' defined above should match the framewidth of the first step of the procedure.
 # Format: [frame_width,pixel_width,SNR]
-step1 = [0.5*1e-6,20*1e-9,5]
-step2 = [0.3*1e-6,5*1e-9,10]
+step1 = [1*1e-6,20*1e-9,5]
+step2 = [0.3*1e-6,3*1e-9,10]
 procedure = [step1,step2]
 
 

@@ -13,8 +13,7 @@ SNR = 10 # Desired signal to noise ratio
 # Format: [frame_width,pixel_width,SNR]
 step1 = [1*1e-6,20*1e-9,5]
 step2 = [0.5*1e-6,5*1e-9,10]
-step3 = [0.3e-6,2e-9,10]
-procedure = [step1,step2,step3]
+procedure = [step1,step2]
 
 
 

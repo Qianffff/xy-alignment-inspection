@@ -9,7 +9,7 @@ from Variables_and_constants import *
 grid, cross_center = real_image()  
 
 # Use Gaussian distribution to meassure image
-picture_grid = measure_image(grid,pixel_width,SNR)
+picture_grid,_ = measure_image(grid,pixel_width,SNR)
 
 # Calculate the position of the cross from the image
 cross_center_measured_px = cross_position(picture_grid,intensity_threshold)

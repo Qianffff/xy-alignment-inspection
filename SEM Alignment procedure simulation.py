@@ -4,7 +4,11 @@ from Denoise_functions import *
 from Variables_and_constants import *
 
 def simulate(procedure):
-    grid, cross_center = real_image() # Generate the wafer area
+    # Generate the wafer area
+    frame_width = procedure[0][0]
+    frame_width_px = int(np.round((frame_width/pixel_width_real))) 
+    if frame_width_px % 2 == 0 : frame_width_px += 1
+    grid, cross_center = real_image(frame_width_px)
     
     # Plot the grid of SE yields. This represents what the real wafer pattern looks like.
     plt.figure(figsize=(6,6))
@@ -16,6 +20,7 @@ def simulate(procedure):
     
     steps = len(procedure)-1 # Number of steps in the procedure (counting from 0)
     step = 0 # Current step
+    total_time = 0 # Total time of the alignment procedure
     while step <= steps:
         frame_width, pixel_width, SNR = procedure[step] # Get the frame_width, pixel_width and SNR for the current step
         # Zoom in (except for the first step)
@@ -42,7 +47,12 @@ def simulate(procedure):
                 origin_shift += np.array([0,int((y-x)/2)]) # Updat the origin shift
         
         # Simulate the scanning of the image with the e-beam
-        measured_image = measure_image(zoomed_grid,pixel_width,SNR)
+        measured_image, time = measure_image(zoomed_grid,pixel_width,SNR)
+        
+        # Update the total time
+        if step == 0: time *= n_eFOVs * (ebeam_FOV_width**2/frame_width**2) + stage_overhead_time # Account for taking multiple ebeam FOV sized images in the first step to find the mark
+        total_time += time
+        print(f"Step {step+1} time = {time*1e3:.6f} ms")
         
         # Calculate the position of the center of the cross (in image pixels)
         cross_center_measured_impx = cross_position(measured_image,intensity_threshold)
@@ -54,6 +64,7 @@ def simulate(procedure):
         error = np.linalg.norm([cross_center[0] - cross_center_measured[0], cross_center[1] - cross_center_measured[1]])
         print(f"Error = {error*1e9:.3f} nm")
         print()
+        if step == steps: print(f"Total time = {total_time*1e3:.6f} ms")
         
         # ===================== Plot =====================
         if show_plots == True:

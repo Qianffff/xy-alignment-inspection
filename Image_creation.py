@@ -5,10 +5,10 @@ from Kernel_and_convolution import *
 from Variables_and_constants import *
 
 
-def real_image():
+def real_image(frame_width_px = pixels_real):
     
-    grid = np.zeros([pixels_real,pixels_real]) # Initialize grid of SE yields
-    center_pixel = int(np.round((pixels_real+1)/2 -1)) # Define the center pixel of the grid (in both x and y) (in pixels)
+    grid = np.zeros([frame_width_px,frame_width_px]) # Initialize grid of SE yields
+    center_pixel = int(np.round((frame_width_px+1)/2 -1)) # Define the center pixel of the grid (in both x and y) (in pixels)
     
     # Cross dimensions in pixels
     cross_length_px = int(cross_length/pixel_width_real)
@@ -29,7 +29,7 @@ def real_image():
     cross_halfwidth_minus_px = int(np.round(center_pixel - cross_half_linewidth_px))
 
     # Generate a random cross position (in pixels) and rotation (in degrees)
-    max_shift = int(np.round(center_pixel - cross_arm_length_px))
+    max_shift = 1 # int(np.round(center_pixel - cross_arm_length_px))
     cross_shift = [int(np.random.randint(-max_shift,max_shift)),int(np.random.randint(-max_shift,max_shift))]
     rotation = np.random.uniform(0,90)
 
@@ -62,7 +62,7 @@ def real_image():
     grid = shift(grid, shift=cross_shift, order=3, mode='constant', cval=0)
 
     # Fourth: add noise in background
-    grid += np.random.random([pixels_real,pixels_real])*(2*average_SE_yield_background)
+    grid += np.random.random([frame_width_px,frame_width_px])*(2*average_SE_yield_background)
     
     # Define the position of the center of the cross relative to the top-left corner of the image (in m)
     cross_center_x = int(np.round(center_pixel+cross_shift[0]))*pixel_width_real
@@ -91,6 +91,8 @@ def measure_image(grid,pixel_width,SNR):
     beam_drift_angle = np.random.uniform(0,2*np.pi)
     # Calculate scan time per pixel (needed for calculating how much beam drift has occured)
     scan_time_per_pixel = SNR**2/(SE_yield*escape_factor*collector_efficiency * (beam_current/e))
+    
+    time = scan_time_per_pixel*pixels**2 + beam_overhead_rate*(pixels*pixel_width)
     
     for i in range(pixels):
         for j in range(pixels):
@@ -132,4 +134,4 @@ def measure_image(grid,pixel_width,SNR):
 
     # Add shot noise
     measured_image = np.random.poisson(expected_number_of_secondary_electrons)
-    return measured_image
+    return measured_image, time

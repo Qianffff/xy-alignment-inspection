@@ -12,8 +12,9 @@ SNR = 10 # Desired signal to noise ratio
 # The parameter 'frame_width' defined above should match the framewidth of the first step of the procedure.
 # Format: [frame_width,pixel_width,SNR]
 step1 = [1*1e-6,20*1e-9,5]
-step2 = [0.3*1e-6,3*1e-9,10]
-procedure = [step1,step2]
+step2 = [0.5*1e-6,5*1e-9,10]
+step3 = [0.3e-6,2e-9,10]
+procedure = [step1,step2,step3]
 
 
 
@@ -48,10 +49,23 @@ cross_linewidth = 30*1e-9 # (15e-9 assumed to be critical dimension (CD), i.e. t
 # Pixel size of real image (not really a pixel, since it approximates reality) (in m)
 pixel_width_real = 1*1e-9
 
+# Time it takes per unit distance the beam has to go from one side of its FOV to the other to scan a new row of pixels, per meter it has to traverse (in s/m)
+beam_overhead_rate = 0.1
 
+# Optical microscope FOV area (in m)
+ebeam_FOV_width = 1*1e-6
+optical_microscope_FOV_width = 10*1e-6
+
+a = 2*9.81 # Maximum stage accelaration (in m/s²)
 
 # ===================== Derived parameters =====================
 
+# Total time spent moving the stage to go from one row of FOV images to the next in the first step of the alignment procedure
+stage_overhead_time = 2*np.sqrt(2/a*(ebeam_FOV_width/2)) * (np.ceil(optical_microscope_FOV_width/ebeam_FOV_width)-1)
+
+# Number of ebeam FOVs needed to cover the optical microscope FOV
+n_eFOVs = (np.ceil(optical_microscope_FOV_width/ebeam_FOV_width))**2
+# Scan time per pixel (in s)
 scan_time_per_pixel = SNR**2/(SE_yield * escape_factor * collector_efficiency * (beam_current/e)) # Scan time per pixel (in s) (inverse of the scan rate)
 
 # Number of pixels (in both x and y) of the real wafer

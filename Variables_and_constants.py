@@ -6,16 +6,18 @@ frame_width = 1*1e-6 # Frame width (in m)
 pixel_width = 20*1e-9 # Pixel size (in m)
 SNR = 10 # Desired signal to noise ratio
 
-# ============ Simulate alignment procedure ============
-# An alignment procedure is a sequence of scans that determine the mark position with increasing accuracy.
+# ============ Test alignment procedures ============
+
+# An alignment procedure is the process of taking a sequence of images to find alignment mark positions.
+# The file 'SEM_Alignment_procedure_simulation' can be used to check if a procedure works, i.e., if an
+# alignment mark can be reliably found using the procedure or not. The procedure might fail due to a 
+# too large pixel size or a too low SNR in a certain step.
 # For each step of the alignment procedure, define the frame_width (in m), pixel_width (in m), and desired SNR.
-# The parameter 'frame_width' defined above should match the framewidth of the first step of the procedure.
-# Format: [frame_width,pixel_width,SNR]
-step1 = [1*1e-6,10*1e-9,10]
-step2 = [0.5*1e-6,2*1e-9,10]
-procedure = [step1,step2]
+# Format: step = [frame_width, pixel_width, SNR] and procedure = [step1, step2, ...]
 
-
+step1 = [1*1e-6, 20*1e-9, 10]
+step2 = [0.5*1e-6, 2*1e-9, 10]
+procedure = [step1, step2]
 
 # ===================== Constants =====================
 

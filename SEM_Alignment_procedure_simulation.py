@@ -79,13 +79,5 @@ def simulate(procedure):
             
         step += 1 # Move to the next step of the procedure
 
-
-simulate_bool = 0
-show_time_bool = 1
-
-if simulate_bool:
-    # Simulate the alignment procedure
-    simulate(procedure)
-if show_time_bool:
-    # Show the relevant numbers for each step
-    print(f"Total alignment time = {show_time(procedure,n_eFOVs)*1e3:.6f} ms")
+# Simulate the alignment procedure
+simulate(procedure)

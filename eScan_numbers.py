@@ -28,14 +28,13 @@ beam_number_1100 = 25
 beam_current_1100 = 4e-9 # A
 beam_pitch_1100 = 8e-6 # m
 FOV_area_1100 = 64e-12 # m²
-n_align_per_grid_1100 = 0.01
+n_align_per_grid_1100 = 1e-4
 
 beam_number_2200 = 2791
 beam_current_2200 = 0.5e-9 # A
 beam_pitch_2200 = 100e-6 # m
 FOV_area_2200 = 1e-12 # m²
 n_align_per_grid_2200 = 1
-
 
 ##################### General parameters ########################
 
@@ -45,7 +44,7 @@ SNR_inspection = 10 # Signal to noise ratio during inspection
 SE_yield = 1
 SE_escape_factor = 0.2                     
 collector_efficiency = 0.8
-cross_length = 1*1e-6 # m
+cross_length = 2*1e-6 # m
 a = 2 * 9.81 # Maximum stage acceleration (m/s²)
 pixel_width = 5e-9 # m
 beam_overhead_rate = 0.1 # s/m

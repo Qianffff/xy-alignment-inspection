@@ -16,6 +16,7 @@ def show_time(procedure,n_eFOVs):
 
             if i == 0: time = time * n_eFOV * (np.sqrt(FOV_area)**2/frame_width**2) + stage_overhead_time_alignment_per_move*n_eFOV + latency # Account for taking multiple ebeam FOV sized images in the first step to find the mark
             else: time += latency
+            print('TIME', time)
             total_time += time
     return total_time
 
@@ -26,9 +27,14 @@ def show_time(procedure,n_eFOVs):
 
 # [beam_number , beam_current , beam_pitch , FOV_area, 
 # Expected_n_FOV_tofindmark = [first mark, second mark, third mark], n_realign_per_grid]
-settings1100 = [25, 4e-9, 8e-6, 64e-12, [4,1,1], 0.01] 
+settings1100 = [25, 4e-9, 8e-6, 64e-12, [4,1,1], 0.01]
 settings2200 = [2791, 0.5e-9, 100e-6, 1e-12, [300,30,1], 1]
 settings_test = [0,0,0,0,[0,0,0],0]
+
+# Initial alignment procedure
+step1 = [1*1e-6,10*1e-9,10]
+step2 = [0.5*1e-6,2*1e-9,10]
+procedure = [step1,step2]
 
 beam_number, beam_current, beam_pitch, FOV_area, Expected_n_FOV_tofindmark, n_realign_per_grid = settings2200
 
@@ -91,7 +97,7 @@ print(f"Alignment time = {alignment_time:.8f} s")
 print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
 print(f"Scan rate = {scan_rate*1e6*3600:.1f} mm²/h")
 print(f"Grid area = {grid_area*1e6:.5f} mm²")
-print(f"Grid scan time = {grid_scan_time/60:.5f} minutes")
+print(f"Grid scan time = {grid_scan_time:.5f} s")
 print(f"Pixel scan time = {pixel_scan_time*1e9:.3f} ns")
 print(f"Pixel area = {pixel_area*1e18:.3f} nm²")
 print(f"Number of pixels = {pixels:.0f}")

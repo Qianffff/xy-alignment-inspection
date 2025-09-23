@@ -16,7 +16,7 @@ SNR = 10 # Desired signal to noise ratio
 # Format: step = [frame_width, pixel_width, SNR] and procedure = [step1, step2, ...]
 
 step1 = [1*1e-6, 20*1e-9, 10]
-step2 = [0.5*1e-6, 2*1e-9, 10]
+step2 = [0.5*1e-6, 5*1e-9, 10]
 procedure = [step1, step2]
 
 # ===================== Constants =====================
@@ -44,8 +44,8 @@ FOV_count = 1 # (Minimum is 1.) Number of FOVs the beam has scanned already. Use
 
 # Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
 # Dimensions in meter
-cross_length =  200*1e-9
-cross_linewidth = 30*1e-9 # (15e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
+cross_length =  0.2*1e-6
+cross_linewidth = 0.03*1e-6
 
 # Pixel size of real image (not really a pixel, since it approximates reality) (in m)
 pixel_width_real = 1*1e-9

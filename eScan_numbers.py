@@ -45,7 +45,7 @@ SNR_inspection = 10 # Signal to noise ratio during inspection
 SE_yield = 1
 SE_escape_factor = 0.2                     
 collector_efficiency = 0.8
-cross_length = 2e-6 # m
+cross_length = 1*1e-6 # m
 a = 2 * 9.81 # Maximum stage acceleration (m/s²)
 pixel_width = 5e-9 # m
 beam_overhead_rate = 0.1 # s/m
@@ -69,14 +69,14 @@ e = 1.602e-19 # C
 n_min = (2*cross_length)**2 / FOV_area_2200 # Minimum number of FOVs needed to image the full cross (with some margin)
 
 step_1_1 = [300, 20e-9, 5]
-step_1_2 = [n_min, 2e-9, 10]
+step_1_2 = [n_min, 5e-9, 10]
 mark_1 = [step_1_1,step_1_2]
 
 step_2_1 = [30, 20e-9, 5]
-step_2_2 = [n_min, 2e-9, 10]
+step_2_2 = [n_min, 5e-9, 10]
 mark_2 = [step_2_1, step_2_2]
 
-step_3_1 = [n_min, 2e-9, 10]
+step_3_1 = [n_min, 5e-9, 10]
 mark_3 = [step_3_1]
 
 procedure2200 = [mark_1,mark_2,mark_3]
@@ -86,13 +86,13 @@ procedure2200 = [mark_1,mark_2,mark_3]
 n_min = (2*cross_length)**2 / FOV_area_1100 # Minimum number of FOVs needed to image the full cross (with some margin)
 
 step_1_1 = [5, 20e-9, 5]
-step_1_2 = [n_min, 2e-9, 10]
+step_1_2 = [n_min, 5e-9, 10]
 mark_1 = [step_1_1,step_1_2]
 
-step_2_1 = [n_min, 2e-9, 10]
+step_2_1 = [n_min, 5e-9, 10]
 mark_2 = [step_2_1]
 
-step_3_1 = [n_min, 2e-9, 10]
+step_3_1 = [n_min, 5e-9, 10]
 mark_3 = [step_3_1]
 
 procedure1100 = [mark_1,mark_2,mark_3]

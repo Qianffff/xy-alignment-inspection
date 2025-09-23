@@ -24,18 +24,17 @@ def show_time(procedure,n_eFOVs):
 # Given / assumed parameters
 # ----------------------------
 
-# [beam_number , beam_current , beam_pitch , FOV_area]
-settings1100 = [25,4e-9,8e-6,64e-12] 
-settings2200 = [2791,0.5e-9,100e-6,1e-12]
-settings_test = [0,0,0,0]
+# [beam_number , beam_current , beam_pitch , FOV_area, 
+# Expected_n_FOV_tofindmark = [first mark, second mark, third mark], n_realign_per_grid]
+settings1100 = [25, 4e-9, 8e-6, 64e-12, [4,1,1], 0.01] 
+settings2200 = [2791, 0.5e-9, 100e-6, 1e-12, [300,30,1], 1]
+settings_test = [0,0,0,0,[0,0,0],0]
 
-beam_number, beam_current, beam_pitch, FOV_area = settings1100
-
-Expected_n_FOV_tofindmark = [300,30,1] # first mark, second mark, third mark
+beam_number, beam_current, beam_pitch, FOV_area, Expected_n_FOV_tofindmark, n_realign_per_grid = settings2200
 
 # Following variables are the same for 1100 and 2200
 optical_accuracy = 10e-6       # m
-SNR = 10                       # signal to noise ratio
+SNR_inspection = 10                       # signal to noise ratio during inspection
 SE_escape_factor = 0.2         
 SE_yield = 1                   
 Collector_efficiency = 0.8
@@ -51,13 +50,10 @@ e_charge = 1.602e-19           # C
 # Calculations
 # ----------------------------
 pixels = int(np.sqrt(FOV_area)/pixel_width)
-if pixels % 2 == 0: pixels += 1
 
-N_SE_required = SNR**2         # number of detected SEs to make image
+N_SE_required = SNR_inspection**2         # number of detected SEs to make image
 stage_overhead_time_alignment_per_move = 2*np.sqrt(2/a*(np.sqrt(FOV_area/2))) 
 stage_overhead_time_inspection = 2*np.sqrt(2/a*(np.sqrt(FOV_area/2))) * (np.ceil(beam_pitch/np.sqrt(FOV_area))-1)
-
-
 
 # Pixel scan time
 pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ Collector_efficiency) / (beam_current / e_charge)
@@ -66,8 +62,8 @@ pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ Collector_effi
 FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1)          # s
 
 # Alignment time
-# alignment_time = FOV_scan_time * num_FOV_images + stage_overhead_time_alignment + latency 
 alignment_time = show_time(procedure,Expected_n_FOV_tofindmark)
+
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time
 
@@ -82,7 +78,8 @@ grid_scan_time = grid_area / scan_rate + stage_overhead_time_inspection
 
 # Pixel area (approx)
 pixels_per_FOV = FOV_scan_time / pixel_scan_time
-pixel_area = FOV_area / pixels_per_FOV
+pixel_area = pixel_width**2
+
 
 
 print(f"FOV scan time = {FOV_scan_time:.3f} s")
@@ -100,10 +97,6 @@ print(f"Pixel area = {pixel_area*1e18:.3f} nm²")
 print(f"Number of pixels = {pixels:.0f}")
 
 # Analysis of throughput losses
-
-
-
-n_realign_per_grid = 1 # Assumption that we only realign once per grid
 
 scan_time_per_alignement = grid_scan_time / n_realign_per_grid
 scanning_fraction = scan_time_per_alignement / (alignment_time + scan_time_per_alignement)

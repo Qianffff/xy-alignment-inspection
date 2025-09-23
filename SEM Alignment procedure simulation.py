@@ -24,7 +24,6 @@ def simulate(procedure):
     
     steps = len(procedure)-1 # Number of steps in the procedure (counting from 0)
     step = 0 # Current step
-    total_time = 0 # Total time of the alignment procedure
     while step <= steps:
         frame_width, pixel_width, SNR = procedure[step] # Get the frame_width, pixel_width and SNR for the current step
         # Zoom in (except for the first step)
@@ -51,13 +50,7 @@ def simulate(procedure):
                 origin_shift += np.array([0,int((y-x)/2)]) # Updat the origin shift
         
         # Simulate the scanning of the image with the e-beam
-        measured_image, time = measure_image(zoomed_grid,pixel_width,SNR)
-        
-        # Update the total time
-        if step == 0: time = time * n_eFOVs * (ebeam_FOV_width**2/frame_width**2) + stage_overhead_time + latency # Account for taking multiple ebeam FOV sized images in the first step to find the mark
-        else: time += latency
-        total_time += time
-        print(f"Step {step+1} time = {time*1e3:.6f} ms")
+        measured_image = measure_image(zoomed_grid,pixel_width,SNR)
         
         # Calculate the position of the center of the cross (in image pixels)
         cross_center_measured_impx = cross_position(measured_image,intensity_threshold)
@@ -69,7 +62,6 @@ def simulate(procedure):
         error = np.linalg.norm([cross_center[0] - cross_center_measured[0], cross_center[1] - cross_center_measured[1]])
         print(f"Error = {error*1e9:.3f} nm")
         print()
-        if step == steps: print(f"Total time = {total_time*1e3:.6f} ms")
         
         # ===================== Plot =====================
         if show_plots == True:

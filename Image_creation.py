@@ -92,8 +92,6 @@ def measure_image(grid,pixel_width,SNR):
     # Calculate scan time per pixel (needed for calculating how much beam drift has occured)
     scan_time_per_pixel = SNR**2/(SE_yield*escape_factor*collector_efficiency * (beam_current/e))
     
-    time = scan_time_per_pixel*pixels**2 + beam_overhead_rate*(pixels*pixel_width)*(pixels-1)
-    
     for i in range(pixels):
         for j in range(pixels):
             
@@ -134,4 +132,4 @@ def measure_image(grid,pixel_width,SNR):
 
     # Add shot noise
     measured_image = np.random.poisson(expected_number_of_secondary_electrons)
-    return measured_image, time
+    return measured_image

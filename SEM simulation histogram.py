@@ -15,7 +15,7 @@ for i in range(simulation_runs):
     print(f"Cross middle y pixel = {int(np.round(cross_center[1]/pixel_width))}")
 
     # Use Gaussian distribution to meassure image
-    picture_grid,_ = measure_image(grid, pixel_width,SNR)
+    picture_grid = measure_image(grid, pixel_width,SNR)
     
     # Position of the cross
     cross_center_measured_px = cross_position(denoise_image(picture_grid),intensity_threshold)

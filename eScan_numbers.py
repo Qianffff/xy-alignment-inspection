@@ -10,7 +10,7 @@ def show_time(procedure):
             n, pixel_width, SNR = step # Get the parameters that define the step
             
             # Calculate intermediate parameters used to find the time
-            scan_time_per_pixel = SNR**2/(SE_yield*SE_escape_factor*Collector_efficiency * (beam_current/e_charge))
+            scan_time_per_pixel = SNR**2/(SE_yield*SE_escape_factor*collector_efficiency * (beam_current/e))
             pixels = np.sqrt(FOV_area) / pixel_width
             
             FOV_time = scan_time_per_pixel*pixels**2 + beam_overhead_rate*(pixels*pixel_width)*(pixels-1) # Time of one FOV
@@ -32,7 +32,7 @@ n_align_per_grid_1100 = 0.01
 
 beam_number_2200 = 2791
 beam_current_2200 = 0.5e-9 # A
-beam_pitch_2200 = 1e-6 # m
+beam_pitch_2200 = 100e-6 # m
 FOV_area_2200 = 1e-12 # m²
 n_align_per_grid_2200 = 1
 
@@ -40,19 +40,19 @@ n_align_per_grid_2200 = 1
 ##################### General parameters ########################
 
 
-optical_accuracy = 10e-6       # m
-SNR_inspection = 10                       # signal to noise ratio during inspection
-SE_escape_factor = 0.2         
-SE_yield = 1                   
-Collector_efficiency = 0.8
+optical_accuracy = 10e-6 # m
+SNR_inspection = 10 # signal to noise ratio during inspection
+SE_yield = 1   
+SE_escape_factor = 0.2                         
+collector_efficiency = 0.8
 cross_length = 2e-6 # m
-a = 2 * 9.81                    # m/s**2
-pixel_width = 5e-9              # m
-beam_overhead_rate = 0.1           # s/m
-latency = (0.1 + 1 + 0.1)*1e-3      #s
+a = 2 * 9.81 # Maximum stage acceleration (m/s²)
+pixel_width = 5e-9 # m
+beam_overhead_rate = 0.1 # s/m
+latency = (0.1 + 1 + 0.1)*1e-3 # s
 
 # Constants
-e_charge = 1.602e-19           # C
+e = 1.602e-19 # C
 
 
 #################### Define alignment procedures ###########################
@@ -66,7 +66,7 @@ e_charge = 1.602e-19           # C
 
 # Create alignment procedure for the 2200:
 
-n_min = cross_length**2 / FOV_area_2200 # Minimum number of FOVs needed to image the full cross (with some margin)
+n_min = (2*cross_length)**2 / FOV_area_2200 # Minimum number of FOVs needed to image the full cross (with some margin)
 
 step_1_1 = [300, 20e-9, 5]
 step_1_2 = [n_min, 2e-9, 10]
@@ -114,19 +114,19 @@ beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure =
 
 pixels = int(np.sqrt(FOV_area)/pixel_width)
 
-N_SE_required = SNR_inspection**2         # number of detected SEs to make image
+N_SE_required = SNR_inspection**2 # number of detected SEs to make image
 stage_overhead_time_alignment_per_move = 2*np.sqrt(2/a*(np.sqrt(FOV_area/2))) 
-stage_overhead_time_inspection = 2*np.sqrt(2/a*(np.sqrt(FOV_area/2))) * (np.ceil(beam_pitch/np.sqrt(FOV_area))-1)
+stage_overhead_time_per_grid = 2*np.sqrt(2/a*(np.sqrt(FOV_area/2))) * (np.ceil(beam_pitch/np.sqrt(FOV_area))-1)
 
 # Pixel scan time
-pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ Collector_efficiency) / (beam_current / e_charge)
+pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ collector_efficiency) / (beam_current/e)
 
 # Number of FOV images needed to find mark
-FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1)          # s
+FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1) # s
 
 # Alignment time
 initial_alignment_time, time_list = show_time(procedure)
-realignment_time = time_list[-1]
+realignment_time = time_list[-1]*3 # Factor 3 for the three marks
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time
@@ -135,10 +135,10 @@ beam_scan_rate = FOV_area / FOV_scan_time
 scan_rate = beam_number * beam_scan_rate
 
 # Grid area
-grid_area = (beam_pitch**2) * beam_number
+grid_area = (np.sqrt(3/4)*beam_pitch**2) * beam_number # sqrt(3/4) due to hexagonal grid shape
 
 # Grid scan time
-grid_scan_time = grid_area / scan_rate + stage_overhead_time_inspection
+grid_scan_time = grid_area / scan_rate + stage_overhead_time_per_grid
 
 # Pixel area (approx)
 pixels_per_FOV = FOV_scan_time / pixel_scan_time
@@ -158,27 +158,31 @@ relative_troughpit_loss = absolute_throughput_loss/scan_rate
 
 ###################### Print numbers #########################
 
+# print(f"Pixel area = {pixel_area*1e18:.0f} nm²")
+print(f"Pixel scan time = {pixel_scan_time*1e9:.2f} ns")
 
-print(f"FOV scan time = {FOV_scan_time:.3f} s")
-print(f"Number of detected SEs to make image = {N_SE_required:.0f}")
-print(f"Stage overhead time for alignment = {stage_overhead_time_alignment_per_move*n_eFOVs_to_align:.3f} s")
-print(f"Stage overhead time for inspection = {stage_overhead_time_inspection:.3f} s")
-print(f"Number of FOV images to find three marks = {n_eFOVs_to_align:.0f}")
-print(f"Initial alignment time = {initial_alignment_time:.8f} s")
-print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
-print(f"Scan rate = {scan_rate*1e6*3600:.1f} mm²/h")
+print(f"Number of pixels in FOV = {pixels**2:.0f}")
+print(f"FOV scan time = {FOV_scan_time:.4f} s")
+
 print(f"Grid area = {grid_area*1e6:.5f} mm²")
 print(f"Grid scan time = {grid_scan_time:.5f} s")
-print(f"Pixel scan time = {pixel_scan_time*1e9:.3f} ns")
-print(f"Pixel area = {pixel_area*1e18:.3f} nm²")
-print(f"Number of pixels = {pixels:.0f}")
+
+print(f"Number of FOV images for initial alignment = {n_eFOVs_to_align:.0f}")
+print(f"Initial alignment time = {initial_alignment_time:.4f} s")
+
+# print(f"SNR during inspection = {SNR_inspection:.0f}")
+print(f"Stage overhead time during initial alignment = {stage_overhead_time_alignment_per_move*n_eFOVs_to_align:.6f} s")
+print(f"Stage overhead time per inspected grid = {stage_overhead_time_per_grid:.6f} s")
+
+# print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
+print(f"Scan rate = {scan_rate*1e6*3600:.1f} mm²/h")
 
 # Analysis of throughput losses
-
 print("#################################################################")
+
 print(f"Scan time per alignment = {scan_time_per_alignement:.3f} s")
-print(f"Realignment time = {realignment_time:.3f} s")
-print(f"Scanning fraction = {scanning_fraction:.6f}")
-print(f"Effective throughput = {effective_throughput*1e6*3600} mm²/h")
-print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600} mm²/h")
-print(f"Relative throughput loss = {relative_troughpit_loss*100} %")
+print(f"Realignment time = {realignment_time:.5f} s")
+print(f"Scanning fraction = {scanning_fraction:.5f}")
+print(f"Effective throughput = {effective_throughput*1e6*3600:.2f} mm²/h")
+print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600:.2f} mm²/h")
+print(f"Relative throughput loss = {relative_troughpit_loss*100:.3f} %")

@@ -4,6 +4,7 @@ from Variables_and_constants import procedure
 
 def show_time(procedure,n_eFOVs): 
     total_time = 0
+    time_list = []
     for n_eFOV in n_eFOVs:
         for i in range(len(procedure)):
             frame_width, pixel_width, SNR = procedure[i]
@@ -16,9 +17,9 @@ def show_time(procedure,n_eFOVs):
 
             if i == 0: time = time * n_eFOV * (np.sqrt(FOV_area)**2/frame_width**2) + stage_overhead_time_alignment_per_move*n_eFOV + latency # Account for taking multiple ebeam FOV sized images in the first step to find the mark
             else: time += latency
-            print('TIME', time)
             total_time += time
-    return total_time
+            time_list.append(time)
+    return total_time, time_list
 
 
 # ----------------------------
@@ -30,11 +31,6 @@ def show_time(procedure,n_eFOVs):
 settings1100 = [25, 4e-9, 8e-6, 64e-12, [4,1,1], 0.01]
 settings2200 = [2791, 0.5e-9, 100e-6, 1e-12, [300,30,1], 1]
 settings_test = [0,0,0,0,[0,0,0],0]
-
-# Initial alignment procedure
-step1 = [1*1e-6,10*1e-9,10]
-step2 = [0.5*1e-6,2*1e-9,10]
-procedure = [step1,step2]
 
 beam_number, beam_current, beam_pitch, FOV_area, Expected_n_FOV_tofindmark, n_realign_per_grid = settings2200
 
@@ -68,7 +64,8 @@ pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ Collector_effi
 FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1)          # s
 
 # Alignment time
-alignment_time = show_time(procedure,Expected_n_FOV_tofindmark)
+initial_alignment_time, time_list = show_time(procedure,Expected_n_FOV_tofindmark)
+realignment_time = time_list[-1]
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time
@@ -93,7 +90,7 @@ print(f"Number of detected SEs to make image = {N_SE_required:.0f}")
 print(f"Stage overhead time for alignment = {stage_overhead_time_alignment_per_move*np.sum(Expected_n_FOV_tofindmark):.3f} s")
 print(f"Stage overhead time for inspection = {stage_overhead_time_inspection:.3f} s")
 print(f"Number of FOV images to find three marks = {np.sum(Expected_n_FOV_tofindmark):.0f}")
-print(f"Alignment time = {alignment_time:.8f} s")
+print(f"Initial alignment time = {initial_alignment_time:.8f} s")
 print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
 print(f"Scan rate = {scan_rate*1e6*3600:.1f} mm²/h")
 print(f"Grid area = {grid_area*1e6:.5f} mm²")
@@ -105,13 +102,13 @@ print(f"Number of pixels = {pixels:.0f}")
 # Analysis of throughput losses
 
 scan_time_per_alignement = grid_scan_time / n_realign_per_grid
-scanning_fraction = scan_time_per_alignement / (alignment_time + scan_time_per_alignement)
+scanning_fraction = scan_time_per_alignement / (realignment_time + scan_time_per_alignement)
 effective_throughput = scan_rate * scanning_fraction
 absolute_throughput_loss = scan_rate - effective_throughput
 relative_troughpit_loss = absolute_throughput_loss/scan_rate
 print("#################################################################")
 print(f"Scan time per alignment = {scan_time_per_alignement:.3f} s")
-print(f"Alignment time = {alignment_time:.3f} s")
+print(f"Realignment time = {realignment_time:.3f} s")
 print(f"Scanning fraction = {scanning_fraction:.6f}")
 print(f"Effective throughput = {effective_throughput*1e6*3600} mm²/h")
 print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600} mm²/h")

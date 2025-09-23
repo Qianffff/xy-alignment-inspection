@@ -25,9 +25,9 @@ def show_time(procedure,n_eFOVs):
 # ----------------------------
 beam_number = 2791               # number of beams
 beam_current = 0.5e-9            # A 
-beam_pitch = 100e-6              # m 
-FOV_area = 1e-12                  # m² 
-Expected_n_FOV_tofindmark = [100,30,1] # first mark, second mark, third mark
+beam_pitch = 100e-6              # m
+FOV_area = 1e-12                  # m²
+Expected_n_FOV_tofindmark = [300,30,1] # first mark, second mark, third mark
 
 # Following variables are the same for 1100 and 2200
 optical_accuracy = 10e-6       # m
@@ -86,7 +86,7 @@ print(f"Number of detected SEs to make image = {N_SE_required:.0f}")
 print(f"Stage overhead time for alignment = {stage_overhead_time_alignment_per_move*np.sum(Expected_n_FOV_tofindmark):.3f} s")
 print(f"Stage overhead time for inspection = {stage_overhead_time_inspection:.3f} s")
 print(f"Number of FOV images to find three marks = {np.sum(Expected_n_FOV_tofindmark):.0f}")
-print(f"Alignment time = {alignment_time:.8f} s (for one mark)")
+print(f"Alignment time = {alignment_time:.8f} s")
 print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
 print(f"Scan rate = {scan_rate*1e6*3600:.1f} mm²/h")
 print(f"Grid area = {grid_area*1e6:.5f} mm²")

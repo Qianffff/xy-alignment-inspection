@@ -96,8 +96,8 @@ def show_time(procedure):
     return total_time
 
 
-simulate_bool = False
-show_time_bool = True
+simulate_bool = 0
+show_time_bool = 1
 
 if simulate_bool:
     # Simulate the alignment procedure

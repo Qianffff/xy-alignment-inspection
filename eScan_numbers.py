@@ -14,7 +14,7 @@ def show_time(procedure):
             pixels = np.sqrt(FOV_area) / pixel_width
             
             FOV_time = scan_time_per_pixel*pixels**2 + beam_overhead_rate*(pixels*pixel_width)*(pixels-1) # Time of one FOV
-            step_time = FOV_time * n * + stage_overhead_time_alignment_per_move * n + latency # Time of the step
+            step_time = FOV_time * n + stage_overhead_time_alignment_per_move * n + latency # Time of the step
             total_time += step_time # Update total time of the procedure
             
             time_list.append(step_time)
@@ -40,10 +40,10 @@ n_align_per_grid_2200 = 1
 ##################### General parameters ########################
 
 
-optical_accuracy = 10e-6 # m
-SNR_inspection = 10 # signal to noise ratio during inspection
-SE_yield = 1   
-SE_escape_factor = 0.2                         
+optical_microscope_accuracy = 10*1e-6 # m
+SNR_inspection = 10 # Signal to noise ratio during inspection
+SE_yield = 1
+SE_escape_factor = 0.2                     
 collector_efficiency = 0.8
 cross_length = 2e-6 # m
 a = 2 * 9.81 # Maximum stage acceleration (m/s²)

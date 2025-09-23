@@ -60,12 +60,9 @@ optical_microscope_FOV_width = 10*1e-6
 a = 2*9.81 # Maximum stage accelaration (in m/s²)
 
 # ===================== Derived parameters =====================
-
-# Total time spent moving the stage to go from one row of FOV images to the next in the first step of the alignment procedure
-stage_overhead_time = 2*np.sqrt(2/a*(ebeam_FOV_width/2)) * (np.ceil(optical_microscope_FOV_width/ebeam_FOV_width)-1)
-
 # Number of ebeam FOVs needed to cover the optical microscope FOV
-n_eFOVs = (np.ceil(optical_microscope_FOV_width/ebeam_FOV_width))**2
+n_eFOVs = [100,30,1]
+
 # Scan time per pixel (in s)
 scan_time_per_pixel = SNR**2/(SE_yield * escape_factor * collector_efficiency * (beam_current/e)) # Scan time per pixel (in s) (inverse of the scan rate)
 

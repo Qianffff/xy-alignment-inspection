@@ -2,6 +2,7 @@ from Cross_detection import *
 from Image_creation import *
 from Denoise_functions import *
 from Variables_and_constants import *
+from eScan_numbers import show_time
 
 def simulate(procedure):
     # Generate the wafer area
@@ -78,23 +79,6 @@ def simulate(procedure):
             
         step += 1 # Move to the next step of the procedure
 
-def show_time(procedure): 
-    total_time = 0
-    for i in range(len(procedure)):
-        frame_width, pixel_width, SNR = procedure[i]
-
-        scan_time_per_pixel = SNR**2/(SE_yield*escape_factor*collector_efficiency * (beam_current/e))
-
-        pixels = frame_width / pixel_width
-
-        time = scan_time_per_pixel*pixels**2 + beam_overhead_rate*(pixels*pixel_width)*(pixels-1)
-
-        if i == 0: time = time * n_eFOVs * (ebeam_FOV_width**2/frame_width**2) + stage_overhead_time + latency # Account for taking multiple ebeam FOV sized images in the first step to find the mark
-        else: time += latency
-        total_time += time
-
-    return total_time
-
 
 simulate_bool = 0
 show_time_bool = 1
@@ -104,4 +88,4 @@ if simulate_bool:
     simulate(procedure)
 if show_time_bool:
     # Show the relevant numbers for each step
-    print(f"Total alignment time = {show_time(procedure)*1e3:.6f} ms")
+    print(f"Total alignment time = {show_time(procedure,n_eFOVs)*1e3:.6f} ms")

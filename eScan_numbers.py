@@ -23,10 +23,14 @@ def show_time(procedure,n_eFOVs):
 # ----------------------------
 # Given / assumed parameters
 # ----------------------------
-beam_number = 2791               # number of beams
-beam_current = 0.5e-9            # A 
-beam_pitch = 100e-6              # m
-FOV_area = 1e-12                  # m²
+
+# [beam_number , beam_current , beam_pitch , FOV_area]
+settings1100 = [25,4e-9,8e-6,64e-12] 
+settings2200 = [2791,0.5e-9,100e-6,1e-12]
+settings_test = [0,0,0,0]
+
+beam_number, beam_current, beam_pitch, FOV_area = settings1100
+
 Expected_n_FOV_tofindmark = [300,30,1] # first mark, second mark, third mark
 
 # Following variables are the same for 1100 and 2200

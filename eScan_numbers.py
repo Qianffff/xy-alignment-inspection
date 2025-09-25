@@ -35,21 +35,38 @@ def get_time(procedure,type='local'):
             time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Latency'] = latency
             time_list.append(step_time)
             j += 1
-        time_breakdown['Mark ' + str(i)]['Stage movement time'] = 1234
+        if type == 'local': time_breakdown['Mark ' + str(i)]['Mark stage movement time'] = stage_overhead_time_local_alignment
+        if type == 'global': time_breakdown['Mark ' + str(i)]['Mark stage movement time'] = stage_overhead_time_mark_to_mark
         i += 1
     return total_time, time_list, time_breakdown
 
 
 def print_alignment_data(data, indent=0):
     for mark, contents in data.items():
-        print(" " * indent + f"{mark}:")
+        mark_total = 0  # total time for this mark
+
+        # First, compute all step totals and stage movement
+        step_totals = {}
         for key, val in contents.items():
             if key.startswith("Step"):
-                print(" " * (indent + 2) + f"{key}:")
+                step_total = sum(val.values())
+                step_totals[key] = step_total
+                mark_total += step_total
+            elif key == "Mark stage movement time":
+                mark_total += val
+
+        # Print mark header with total
+        print("   " * indent + f"{mark}: {mark_total:.6f} s")
+
+        # Print step details
+        for key, val in contents.items():
+            if key.startswith("Step"):
+                print("   " * (indent + 2) + f"{key}: {step_totals[key]:.6f} s")
                 for subkey, time in val.items():
-                    print(" " * (indent + 4) + f"{subkey}: {time:.6f} s")
-            elif key == "Stage movement time":
-                print(" " * (indent + 2) + f"{key}: {val:.6f} s")
+                    print("   " * (indent + 4) + f"{subkey}: {time:.6f} s")
+            elif key == "Mark stage movement time":
+                print("   " * (indent + 2) + f"{key}: {val:.6f} s")
+
 
 ###################### Machine-speficic parameters #############################
 

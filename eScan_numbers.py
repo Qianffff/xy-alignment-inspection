@@ -31,7 +31,7 @@ def get_time(procedure,type='local'):
 
             time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total FOV scan time'] = scan_time_per_pixel*pixels**2 * n
             time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total FOV beam overhead time'] = beam_overhead_rate*(pixels*pixel_width)*(pixels-1) * n
-            time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total stage overhead time'] = stage_overhead_time_alignment_per_move * n
+            time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total stage overhead time'] = stage_overhead_time_per_FOV * n
             time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Latency'] = latency
             time_list.append(step_time)
             j += 1

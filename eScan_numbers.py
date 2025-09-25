@@ -5,21 +5,44 @@ import numpy as np
 def show_time(procedure):
     total_time = 0
     time_list = []
+    time_breakdown = {}
+    i = 1
     for mark in procedure:
+        time_breakdown['Mark ' + str(i)] = {}
+        j = 1
         for step in mark:
+            time_breakdown['Mark ' + str(i)]['Step ' + str(j)] = {}
             n, pixel_width, SNR = step # Get the parameters that define the step
             
             # Calculate intermediate parameters used to find the time
             scan_time_per_pixel = SNR**2/(SE_yield*SE_escape_factor*collector_efficiency * (beam_current/e))
             pixels = np.sqrt(FOV_area) / pixel_width
-            
-            FOV_time = scan_time_per_pixel*pixels**2 + beam_overhead_rate*(pixels*pixel_width)*(pixels-1) # Time of one FOV
-            step_time = FOV_time * n * + stage_overhead_time_alignment_per_move * n + latency # Time of the step
-            total_time += step_time # Update total time of the procedure
-            
-            time_list.append(step_time)
-    return total_time, time_list
 
+            FOV_time = scan_time_per_pixel*pixels**2 + beam_overhead_rate*(pixels*pixel_width)*(pixels-1) # Time of one FOV
+            step_time = FOV_time * n + stage_overhead_time_alignment_per_move * n + latency # Time of the step
+            total_time += step_time # Update total time of the procedure
+
+            time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total FOV scan time'] = scan_time_per_pixel*pixels**2 * n
+            time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total FOV beam overhead time'] = beam_overhead_rate*(pixels*pixel_width)*(pixels-1) * n
+            time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total stage overhead time'] = stage_overhead_time_alignment_per_move * n
+            time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Latency'] = latency
+            time_list.append(step_time)
+            j += 1
+        time_breakdown['Mark ' + str(i)]['Stage movement time'] = 1234
+        i += 1
+    return total_time, time_list, time_breakdown
+
+
+def print_alignment_data(data, indent=0):
+    for mark, contents in data.items():
+        print(" " * indent + f"{mark}:")
+        for key, val in contents.items():
+            if key.startswith("Step"):
+                print(" " * (indent + 2) + f"{key}:")
+                for subkey, time in val.items():
+                    print(" " * (indent + 4) + f"{subkey}: {time:.6f} s")
+            elif key == "Stage movement time":
+                print(" " * (indent + 2) + f"{key}: {val:.6f} s")
 
 ###################### Machine-speficic parameters #############################
 
@@ -125,7 +148,10 @@ pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ collector_effi
 FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1) # s
 
 # Alignment time
-initial_alignment_time, time_list = show_time(procedure)
+initial_alignment_time, time_list, time_breakdown = show_time(procedure)
+print("##################################################################")
+print_alignment_data(time_breakdown)
+print("##################################################################")
 realignment_time = time_list[-1]*3 # Factor 3 for the three marks
 
 # Beam scan rate (per beam)

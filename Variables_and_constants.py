@@ -2,7 +2,7 @@ import numpy as np
 
 # ===================== Parameters =====================
 
-frame_width = 1*1e-6 # Frame width (in m)
+frame_width = 8*1e-6 # Frame width (in m)
 pixel_width = 20*1e-9 # Pixel size (in m)
 SNR = 10 # Desired signal to noise ratio
 
@@ -15,8 +15,8 @@ SNR = 10 # Desired signal to noise ratio
 # For each step of the alignment procedure, define the frame_width (in m), pixel_width (in m), and desired SNR.
 # Format: step = [frame_width, pixel_width, SNR] and procedure = [step1, step2, ...]
 
-step1 = [1*1e-6, 20*1e-9, 10]
-step2 = [0.5*1e-6, 2*1e-9, 10]
+step1 = [8*1e-6, 400*1e-9, 10]
+step2 = [4*1e-6, 40*1e-9, 10]
 procedure = [step1, step2]
 
 # ===================== Constants =====================
@@ -33,6 +33,11 @@ SE_yield_cross_edge = 1 # SE yield of the cross edges (excluding background)
 SE_yield_cross_body = 0.5 # SE yield of the cross body (excluding background)
 SE_yield = SE_yield_cross_edge + average_SE_yield_background # Only used to calculate the scan time per pixel
 
+# Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
+# Dimensions in meter
+cross_length =  2*1e-6
+cross_linewidth = 0.3*1e-6
+
 FWHM = 8e-9 # Full width half maximum of the electron beam (in m)
 
 # To model beam alignment error, the position of the center of the beam is normally distributed 
@@ -42,24 +47,12 @@ beam_placement_error_std = 8*1e-9 # (8*1e-9 is a guess based on the breakdown of
 drift_rate = 5*1e-9/60 # Beam drift rate (in m/s).
 FOV_count = 1 # (Minimum is 1.) Number of FOVs the beam has scanned already. Used to calculate how much beam drift has accumulated.
 
-# Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
-# Dimensions in meter
-cross_length =  200*1e-9
-cross_linewidth = 30*1e-9 # (15e-9 assumed to be critical dimension (CD), i.e. the thinnest line that can be printed)
-
 # Pixel size of real image (not really a pixel, since it approximates reality) (in m)
-pixel_width_real = 1*1e-9
-
-# Time it takes per unit distance the beam has to go from one side of its FOV to the other to scan a new row of pixels, per meter it has to traverse (in s/m)
-beam_overhead_rate = 0.1
-# Time it takes to send SEM data to a computer, process it (i.e. find the mark), and send the result back to the SEM
-latency = (0.1 + 1 + 0.1)*1e-3
+pixel_width_real = 8*1e-9
 
 # Optical microscope FOV area (in m)
 ebeam_FOV_width = 8*1e-6
 optical_microscope_FOV_width = 10*1e-6
-
-a = 2*9.81 # Maximum stage accelaration (in m/s²)
 
 # ===================== Derived parameters =====================
 # Number of ebeam FOVs needed to cover the optical microscope FOV

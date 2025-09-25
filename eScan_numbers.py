@@ -66,7 +66,7 @@ def print_alignment_data(data, procedure, indent=0):
         for key, val in contents.items():
             if key.startswith("Step"):
                 step_total = sum(val.values())
-                print("   " * (indent + 2) + f"{key}(N_FOV = {procedure[i][j][0]}, Pixel Width = {procedure[i][j][1]}, SNR = {procedure[i][j][2]}): {step_total:.6f} s")
+                print("   " * (indent + 2) + f"{key} (N_FOV = {procedure[i][j][0]}, Pixel Width = {procedure[i][j][1]}, SNR = {procedure[i][j][2]}): {step_total:.6f} s")
                 for subkey, time in val.items():
                     print("   " * (indent + 4) + f"{subkey}: {time:.6f} s")
             elif key == "Mark stage movement time":

@@ -1,4 +1,3 @@
-import math
 import numpy as np
 
 # Calculate the time of an alignment procedure
@@ -97,12 +96,10 @@ SNR_inspection = 10 # Signal to noise ratio during inspection
 SE_yield = 1
 SE_escape_factor = 0.2                     
 collector_efficiency = 0.8
-cross_length = 2*1e-6 # m
-a = 2 * 9.81 # Maximum stage acceleration (m/s²)
+cross_length = 4*1e-6 # m
 pixel_width = 5e-9 # m
 beam_overhead_rate = 0.1 # s/m
 latency = (0.1 + 1 + 0.1)*1e-3 # s
-mark_distance = 30e-3 # Distance between alignment marks (m)
 
 # Constants
 e = 1.602e-19 # C
@@ -194,11 +191,13 @@ N_SE_required = SNR_inspection**2 # number of detected SEs to make image
 
 stage_speed = 0.4 # m/s
 stage_settling_time = 1e-3 # s
+mark_distance_global = 0.15 # m
+total_stage_movement_local_realignment = 42e-3 # (in m) 42e-3 is the distance to go from the center of a 26x33 mm die to the corner and back again
+
 stage_overhead_time_per_FOV = stage_speed * FOV_width + stage_settling_time
 stage_overhead_time_per_grid = stage_overhead_time_per_FOV * (np.ceil(beam_pitch/FOV_width)-1)
-mark_distance_global = 0.15 # m 
 stage_overhead_time_mark_to_mark = stage_speed * mark_distance_global
-stage_overhead_time_local_alignment = stage_speed * 42e-3 # (in m) 42e-3 is the distance to go from the center of a 26x33 mm die to the corner and back again
+stage_overhead_time_local_alignment = stage_speed * total_stage_movement_local_realignment
 
 # Pixel scan time
 pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ collector_efficiency) / (beam_current/e)

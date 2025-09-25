@@ -4,7 +4,6 @@ import numpy as np
 # Calculate the time of an alignment procedure
 def get_time(procedure,type='local'):
     total_time = 0
-    time_list = []
     time_breakdown = {}
     i = 1
     for mark in procedure:
@@ -33,15 +32,15 @@ def get_time(procedure,type='local'):
             time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total FOV beam overhead time'] = beam_overhead_rate*(pixels*pixel_width)*(pixels-1) * n
             time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Total stage overhead time'] = stage_overhead_time_per_FOV * n
             time_breakdown['Mark ' + str(i)]['Step ' + str(j)]['Latency'] = latency
-            time_list.append(step_time)
+
             j += 1
         if type == 'local': time_breakdown['Mark ' + str(i)]['Mark stage movement time'] = stage_overhead_time_local_alignment
         if type == 'global': time_breakdown['Mark ' + str(i)]['Mark stage movement time'] = stage_overhead_time_mark_to_mark
         i += 1
-    return total_time, time_list, time_breakdown
+    return total_time, time_breakdown
 
 
-def print_alignment_data(data, indent=0):
+def print_alignment_data(data, procedure, indent=0):
     grand_total = 0  # total across all marks
     mark_totals = {}
 
@@ -60,17 +59,20 @@ def print_alignment_data(data, indent=0):
     print(f"Total alignment time: {grand_total:.6f} s\n")
 
     # Second pass to print formatted output
+    i = 0
     for mark, contents in data.items():
         print("   " * indent + f"{mark}: {mark_totals[mark]:.6f} s")
-
+        j = 0
         for key, val in contents.items():
             if key.startswith("Step"):
                 step_total = sum(val.values())
-                print("   " * (indent + 2) + f"{key}: {step_total:.6f} s")
+                print("   " * (indent + 2) + f"{key}(N_FOV = {procedure[i][j][0]}, Pixel Width = {procedure[i][j][1]}, SNR = {procedure[i][j][2]}): {step_total:.6f} s")
                 for subkey, time in val.items():
                     print("   " * (indent + 4) + f"{subkey}: {time:.6f} s")
             elif key == "Mark stage movement time":
                 print("   " * (indent + 2) + f"{key}: {val:.6f} s")
+            j += 1
+        i += 1
 
 
 
@@ -205,11 +207,16 @@ pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ collector_effi
 FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1) # s
 
 # Alignment time
-global_alignment_time, time_list, time_breakdown = get_time(procedure_global,'global')
+global_alignment_time, time_breakdown_global_alignment = get_time(procedure_global,'global')
+realignment_time,time_breakdown_local_alignment = get_time(procedure_local,'local')
 print("##################################################################")
-print_alignment_data(time_breakdown)
+print_alignment_data(time_breakdown_global_alignment,procedure_global)
 print("##################################################################")
-realignment_time,_,_ = get_time(procedure_local,'local')
+
+# print("##################################################################")
+# print_alignment_data(time_breakdown_local_alignment,procedure_local)
+# print("##################################################################")
+
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time

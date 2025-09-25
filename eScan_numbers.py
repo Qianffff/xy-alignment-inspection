@@ -101,6 +101,11 @@ pixel_width = 5e-9 # m
 beam_overhead_rate = 0.1 # s/m
 latency = (0.1 + 1 + 0.1)*1e-3 # s
 
+stage_speed = 0.4 # m/s
+stage_settling_time = 1e-3 # s
+mark_distance_global = 0.15 # m
+total_stage_movement_local_realignment = 42e-3 # (in m) 42e-3 is the distance to go from the center of a 26x33 mm die to the corner and back again
+
 # Constants
 e = 1.602e-19 # C
 
@@ -188,11 +193,6 @@ FOV_width = np.sqrt(FOV_area)
 pixels = int(FOV_width/pixel_width)
 
 N_SE_required = SNR_inspection**2 # number of detected SEs to make image
-
-stage_speed = 0.4 # m/s
-stage_settling_time = 1e-3 # s
-mark_distance_global = 0.15 # m
-total_stage_movement_local_realignment = 42e-3 # (in m) 42e-3 is the distance to go from the center of a 26x33 mm die to the corner and back again
 
 stage_overhead_time_per_FOV = stage_speed * FOV_width + stage_settling_time
 stage_overhead_time_per_grid = stage_overhead_time_per_FOV * (np.ceil(beam_pitch/FOV_width)-1)

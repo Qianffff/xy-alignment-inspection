@@ -65,7 +65,7 @@ def print_alignment_data(data, procedure, indent=0):
         for key, val in contents.items():
             if key.startswith("Step"):
                 step_total = sum(val.values())
-                print("   " * (indent + 2) + f"{key}(N_FOV = {procedure[i][j][0]}, Pixel Width = {procedure[i][j][1]}, SNR = {procedure[i][j][2]}): {step_total:.6f} s")
+                print("   " * (indent + 2) + f"{key} (N_FOV = {procedure[i][j][0]}, Pixel Width = {procedure[i][j][1]}, SNR = {procedure[i][j][2]}): {step_total:.6f} s")
                 for subkey, time in val.items():
                     print("   " * (indent + 4) + f"{subkey}: {time:.6f} s")
             elif key == "Mark stage movement time":
@@ -177,9 +177,9 @@ procedure_1100_local = [mark_1]
 # [beam_number , beam_current , beam_pitch , FOV_area, n_realign_per_grid]
 settings1100 = [beam_number_1100, beam_current_1100, beam_pitch_1100, FOV_area_1100, n_align_per_grid_1100, procedure_1100_global, procedure_1100_local]
 settings2200 = [beam_number_2200, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
-settings_test = [0,0,0,0,0]
+settings_test = [beam_number_2200*7, beam_current_2200*8, beam_pitch_2200, FOV_area_2200*1.5, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 
-beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings2200
+beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings_test
 
 
 ############################# Calculations ####################################

@@ -42,30 +42,36 @@ def get_time(procedure,type='local'):
 
 
 def print_alignment_data(data, indent=0):
-    for mark, contents in data.items():
-        mark_total = 0  # total time for this mark
+    grand_total = 0  # total across all marks
+    mark_totals = {}
 
-        # First, compute all step totals and stage movement
-        step_totals = {}
+    # First pass to compute all totals
+    for mark, contents in data.items():
+        mark_total = 0
+        for key, val in contents.items():
+            if key.startswith("Step"):
+                mark_total += sum(val.values())
+            elif key == "Mark stage movement time":
+                mark_total += val
+        mark_totals[mark] = mark_total
+        grand_total += mark_total
+
+    # Print grand total at top
+    print(f"Total alignment time: {grand_total:.6f} s\n")
+
+    # Second pass to print formatted output
+    for mark, contents in data.items():
+        print("   " * indent + f"{mark}: {mark_totals[mark]:.6f} s")
+
         for key, val in contents.items():
             if key.startswith("Step"):
                 step_total = sum(val.values())
-                step_totals[key] = step_total
-                mark_total += step_total
-            elif key == "Mark stage movement time":
-                mark_total += val
-
-        # Print mark header with total
-        print("   " * indent + f"{mark}: {mark_total:.6f} s")
-
-        # Print step details
-        for key, val in contents.items():
-            if key.startswith("Step"):
-                print("   " * (indent + 2) + f"{key}: {step_totals[key]:.6f} s")
+                print("   " * (indent + 2) + f"{key}: {step_total:.6f} s")
                 for subkey, time in val.items():
                     print("   " * (indent + 4) + f"{subkey}: {time:.6f} s")
             elif key == "Mark stage movement time":
                 print("   " * (indent + 2) + f"{key}: {val:.6f} s")
+
 
 
 ###################### Machine-speficic parameters #############################

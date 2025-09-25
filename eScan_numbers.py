@@ -81,7 +81,7 @@ beam_number_1100 = 25
 beam_current_1100 = 4e-9 # A
 beam_pitch_1100 = 8e-6 # m
 FOV_area_1100 = 64e-12 # m²
-n_align_per_grid_1100 = 1e-4
+n_align_per_grid_1100 = 6.62e-5 # Based on one local alignment per 24 mm²
 
 beam_number_2200 = 2791
 beam_current_2200 = 0.5e-9 # A
@@ -184,7 +184,7 @@ settings1100 = [beam_number_1100, beam_current_1100, beam_pitch_1100, FOV_area_1
 settings2200 = [beam_number_2200, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 settings_test = [beam_number_2200*7, beam_current_2200*8, beam_pitch_2200, FOV_area_2200*1.5, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 
-beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings_test
+beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings1100
 
 
 ############################# Calculations ####################################

@@ -185,7 +185,8 @@ pixels = int(FOV_width/pixel_width)
 N_SE_required = SNR_inspection**2 # number of detected SEs to make image
 
 stage_speed = 0.4 # m/s
-stage_overhead_time_per_FOV = stage_speed * FOV_width
+stage_settling_time = 1e-3 # s
+stage_overhead_time_per_FOV = stage_speed * FOV_width + stage_settling_time
 stage_overhead_time_per_grid = stage_overhead_time_per_FOV * (np.ceil(beam_pitch/FOV_width)-1)
 mark_distance_global = 0.15 # m 
 stage_overhead_time_mark_to_mark = stage_speed * mark_distance_global

@@ -1,7 +1,7 @@
 import numpy as np
 
 # ===================== Parameters =====================
-
+# Used in 'SEMmodel' and 'SEM_simulation_histogram'
 frame_width = 16*1e-6 # Frame width (in m)
 pixel_width = 5*1e-9 # Pixel size (in m)
 SNR = 10 # Desired signal to noise ratio
@@ -22,7 +22,7 @@ procedure = [step1, step2]
 # ===================== Constants =====================
 
 # Pixel size of real image (not really a pixel, since it approximates reality) (in m)
-pixel_width_real = 8*1e-9
+pixel_width_real = 16*1e-9
 
 # Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
 # Dimensions in meter

@@ -60,8 +60,7 @@ def simulate(procedure):
         cross_center_measured = cross_center_measured_rlpx * pixel_width_real # Convert from pixels to meters
         # Difference between calculated cross center position and actual position (in m)
         error = np.linalg.norm([cross_center[0] - cross_center_measured[0], cross_center[1] - cross_center_measured[1]])
-        print(f"Error = {error*1e9:.3f} nm")
-        print()
+        # print(f"Error = {error*1e9:.3f} nm")
         
         # ===================== Plot =====================
         if show_plots == True:

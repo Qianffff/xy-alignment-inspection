@@ -102,7 +102,7 @@ latency = (0.1 + 1 + 0.1)*1e-3 # s
 
 stage_speed = 0.4 # m/s
 a = 2*9.81 # stage acceleration (m/s²)
-stage_settling_time = 1e-3 # s
+stage_settling_time = 1*1e-3 # s
 mark_distance_global = 0.15 # m
 total_stage_movement_local_alignment = 42e-3 # (in m) 42e-3 is the distance to go from the center of a 26x33 mm die to the corner and back again
 
@@ -182,9 +182,10 @@ procedure_1100_local = [mark_1]
 # [beam_number , beam_current , beam_pitch , FOV_area, n_realign_per_grid]
 settings1100 = ['1100', beam_number_1100, beam_current_1100, beam_pitch_1100, FOV_area_1100, n_align_per_grid_1100, procedure_1100_global, procedure_1100_local]
 settings2200 = ['2200', beam_number_2200, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
+settings3000 = ['3000', beam_number_2200*10.7, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 settings_test = ['test', beam_number_2200*10.7, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 
-machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings2200
+machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings3000
 
 ############################# Calculations ####################################
 

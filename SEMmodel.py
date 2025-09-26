@@ -16,7 +16,6 @@ cross_center_measured_px = cross_position(picture_grid,intensity_threshold)
 cross_center_measured = cross_center_measured_px * pixel_width # Convert from pixels to meters
 # Difference between calculated cross center position and actual position (in m)
 error = np.linalg.norm([cross_center[0] - cross_center_measured[0], cross_center[1] - cross_center_measured[1]])
-print(cross_center_measured_px)
 # Listing some values of variables used in the simulation
 time_to_make_picture = pixels**2*scan_time_per_pixel
 print(f"Time to make image = {time_to_make_picture:.5f} seconds")

@@ -6,7 +6,6 @@ def get_time(procedure,type='local'):
     time_breakdown = {}
     i = 1
     for mark in procedure:
-        
         # Include stage overhead time (for movements to, from, and between marks)
         if type == 'local': total_time += stage_overhead_time_local_alignment
         if type == 'global': total_time += stage_overhead_time_mark_to_mark
@@ -67,7 +66,7 @@ def print_alignment_data(data, procedure, indent=0):
                 step_total = sum(val.values())
                 print("   " * (indent + 2) + f"{key} (N_FOV = {procedure[i][j][0]}, Pixel Width = {procedure[i][j][1]}, SNR = {procedure[i][j][2]}): {step_total:.6f} s")
                 for subkey, time in val.items():
-                    print("   " * (indent + 4) + f"{subkey}: {time:.6f} s")
+                    print("   " * (indent + 4) + f"{subkey}: {time*1e3:.2f} ms")
             elif key == "Mark stage movement time":
                 print("   " * (indent + 2) + f"{key}: {val:.6f} s")
             j += 1
@@ -94,7 +93,7 @@ n_align_per_grid_2200 = 1
 optical_microscope_accuracy = 10*1e-6 # m
 SNR_inspection = 10 # Signal to noise ratio during inspection
 SE_yield = 1
-SE_escape_factor = 0.2                     
+SE_escape_factor = 0.2                
 collector_efficiency = 0.8
 cross_length = 4*1e-6 # m
 pixel_width = 5e-9 # m
@@ -102,9 +101,10 @@ beam_overhead_rate = 0.1 # s/m
 latency = (0.1 + 1 + 0.1)*1e-3 # s
 
 stage_speed = 0.4 # m/s
+a = 2*9.81 # stage acceleration (m/s²)
 stage_settling_time = 1e-3 # s
 mark_distance_global = 0.15 # m
-total_stage_movement_local_realignment = 42e-3 # (in m) 42e-3 is the distance to go from the center of a 26x33 mm die to the corner and back again
+total_stage_movement_local_alignment = 42e-3 # (in m) 42e-3 is the distance to go from the center of a 26x33 mm die to the corner and back again
 
 # Constants
 e = 1.602e-19 # C
@@ -144,8 +144,8 @@ procedure_2200_global = [mark_1,mark_2,mark_3,mark_4,mark_5]
 
 # Create local alignment procedure for the 2200:
 
-step_1 = [n_min, 5e-9, 10]
-mark1 = [step_1_1]
+step_1_1 = [n_min, 5e-9, 10]
+mark_1 = [step_1_1]
 procedure_2200_local = [mark_1]
 
 # Create global alignment procedure for the 1100:
@@ -172,20 +172,19 @@ procedure_1100_global = [mark_1,mark_2,mark_3,mark_4,mark_5]
 
 # Create local alignment procedure for the 1100:
 
-step_1 = [n_min, 5e-9, 10]
-mark1 = [step_1_1]
+step_1_1 = [n_min, 5e-9, 10]
+mark_1 = [step_1_1]
 procedure_1100_local = [mark_1]
 
 ################## Quick switch between machine settings #########################
 
 
 # [beam_number , beam_current , beam_pitch , FOV_area, n_realign_per_grid]
-settings1100 = [beam_number_1100, beam_current_1100, beam_pitch_1100, FOV_area_1100, n_align_per_grid_1100, procedure_1100_global, procedure_1100_local]
-settings2200 = [beam_number_2200, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
-settings_test = [beam_number_2200*7, beam_current_2200*8, beam_pitch_2200, FOV_area_2200*1.5, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
+settings1100 = ['1100', beam_number_1100, beam_current_1100, beam_pitch_1100, FOV_area_1100, n_align_per_grid_1100, procedure_1100_global, procedure_1100_local]
+settings2200 = ['2200', beam_number_2200, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
+settings_test = ['test', beam_number_2200*10.7, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 
-beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings1100
-
+machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings2200
 
 ############################# Calculations ####################################
 
@@ -194,10 +193,10 @@ pixels = int(FOV_width/pixel_width)
 
 N_SE_required = SNR_inspection**2 # number of detected SEs to make image
 
-stage_overhead_time_per_FOV = stage_speed * FOV_width + stage_settling_time
+stage_overhead_time_per_FOV = 2*np.sqrt(2*(FOV_width/2)/a) + stage_settling_time
 stage_overhead_time_per_grid = stage_overhead_time_per_FOV * (np.ceil(beam_pitch/FOV_width)-1)
-stage_overhead_time_mark_to_mark = stage_speed * mark_distance_global
-stage_overhead_time_local_alignment = stage_speed * total_stage_movement_local_realignment
+stage_overhead_time_mark_to_mark = mark_distance_global / stage_speed
+stage_overhead_time_local_alignment = total_stage_movement_local_alignment / stage_speed
 
 # Pixel scan time
 pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ collector_efficiency) / (beam_current/e)
@@ -206,16 +205,15 @@ pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ collector_effi
 FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1) # s
 
 # Alignment time
+
 global_alignment_time, time_breakdown_global_alignment = get_time(procedure_global,'global')
-realignment_time,time_breakdown_local_alignment = get_time(procedure_local,'local')
-print("##################################################################")
-print_alignment_data(time_breakdown_global_alignment,procedure_global)
-print("##################################################################")
-
 # print("##################################################################")
-# print_alignment_data(time_breakdown_local_alignment,procedure_local)
+# print_alignment_data(time_breakdown_global_alignment,procedure_global)
 # print("##################################################################")
-
+local_alignment_time,time_breakdown_local_alignment = get_time(procedure_local,'local')
+print("##################################################################")
+print_alignment_data(time_breakdown_local_alignment,procedure_local)
+print("##################################################################")
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time
@@ -224,7 +222,8 @@ beam_scan_rate = FOV_area / FOV_scan_time
 scan_rate = beam_number * beam_scan_rate
 
 # Grid area
-grid_area = (np.sqrt(3/4)*beam_pitch**2) * beam_number # sqrt(3/4) due to hexagonal grid shape
+if machine == '1100': grid_area = (beam_pitch**2) * beam_number
+else: grid_area = (np.sqrt(3/4)*beam_pitch**2) * beam_number # sqrt(3/4) due to hexagonal grid shape
 
 # Grid scan time
 grid_scan_time = grid_area / scan_rate + stage_overhead_time_per_grid
@@ -238,16 +237,26 @@ for mark in procedure_global:
     for step in mark:
         n_eFOVs_to_align_global += step[0]
 
-scan_time_per_alignement = grid_scan_time / n_realign_per_grid
-scanning_fraction = scan_time_per_alignement / (realignment_time + scan_time_per_alignement)
+
+# Assume that you need realignment at fixed area intervals:
+scanned_area_per_alignment = 24.17*1e-6 # m² # This means local alignment must be done for every 24.17 mm² that is scanned. (24.17 mm² is the grid area of the eScan2200.)
+scan_time_per_alignment = scanned_area_per_alignment / scan_rate
+scanning_fraction = scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)
 effective_throughput = scan_rate * scanning_fraction
 absolute_throughput_loss = scan_rate - effective_throughput
-relative_troughpit_loss = absolute_throughput_loss/scan_rate
+relative_troughput_loss = absolute_throughput_loss/scan_rate # = 1 - scanning_fraction
+
+# # Older version: assume you need realignment 'n_realign_per_grid' times per grid (independent of the grid area)
+# scan_time_per_alignement = grid_scan_time / n_realign_per_grid
+# scanning_fraction = scan_time_per_alignement / (local_alignment_time + scan_time_per_alignement)
+# effective_throughput = scan_rate * scanning_fraction
+# absolute_throughput_loss = scan_rate - effective_throughput
+# relative_troughput_loss = absolute_throughput_loss/scan_rate
 
 
 ###################### Print numbers #########################
 
-# print(f"Pixel area = {pixel_area*1e18:.0f} nm²")
+print(f"Pixel area = {pixel_area*1e18:.0f} nm²")
 print(f"Pixel scan time = {pixel_scan_time*1e9:.2f} ns")
 
 print(f"Number of pixels in FOV = {pixels**2:.0f}")
@@ -259,20 +268,20 @@ print(f"Grid scan time = {grid_scan_time:.5f} s")
 print(f"Number of FOV images for global alignment = {n_eFOVs_to_align_global:.0f}")
 print(f"Global alignment time = {global_alignment_time:.4f} s")
 
-# print(f"SNR during inspection = {SNR_inspection:.0f}")
+print(f"SNR during inspection = {SNR_inspection:.0f}")
 print(f"Stage overhead time during global alignment = {stage_overhead_time_per_FOV*n_eFOVs_to_align_global:.6f} s")
 print(f"Stage overhead time per inspected grid = {stage_overhead_time_per_grid:.6f} s")
 print(f"Mark-to-mark stage overhead time (for global align) = {stage_overhead_time_mark_to_mark*1e3:.3f} ms")
 
-# print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
-print(f"Scan rate = {scan_rate*1e6*3600:.1f} mm²/h")
+print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
+print(f"Scan rate = {scan_rate*1e6*3600:.3f} mm²/h")
 
 # Analysis of throughput losses
 print("#################################################################")
 
-print(f"Scan time per alignment = {scan_time_per_alignement:.3f} s")
-print(f"Realignment time = {realignment_time:.5f} s")
+print(f"Scan time per alignment = {scan_time_per_alignment:.3f} s")
+print(f"Local alignment time = {local_alignment_time:.5f} s")
 print(f"Scanning fraction = {scanning_fraction:.5f}")
 print(f"Effective throughput = {effective_throughput*1e6*3600:.2f} mm²/h")
 print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600:.2f} mm²/h")
-print(f"Relative throughput loss = {relative_troughpit_loss*100:.3f} %")
+print(f"Relative throughput loss = {relative_troughput_loss*100:.3f} %")

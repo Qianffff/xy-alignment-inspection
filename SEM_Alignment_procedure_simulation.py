@@ -2,7 +2,6 @@ from Cross_detection import *
 from Image_creation import *
 from Denoise_functions import *
 from Variables_and_constants import *
-from eScan_numbers import show_time
 
 def simulate(procedure):
     # Generate the wafer area

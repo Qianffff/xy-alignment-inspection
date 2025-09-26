@@ -75,7 +75,7 @@ def simulate(procedure):
             plt.tight_layout()
             plt.show(block = step==steps)
             plt.pause(0.5)
-            
+        
         step += 1 # Move to the next step of the procedure
 
 # Simulate the alignment procedure

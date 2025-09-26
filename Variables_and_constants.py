@@ -2,9 +2,12 @@ import numpy as np
 
 # ===================== Parameters =====================
 # Used in 'SEMmodel' and 'SEM_simulation_histogram'
+
 frame_width = 16*1e-6 # Frame width (in m)
-pixel_width = 5*1e-9 # Pixel size (in m)
+pixel_width = 100*1e-9 # Pixel size (in m)
 SNR = 10 # Desired signal to noise ratio
+
+simulation_runs=0 # For 'SEM_simulation_histogram'
 
 # ============ Test alignment procedures ============
 
@@ -31,6 +34,8 @@ cross_linewidth = 0.6*1e-6
 
 intensity_threshold=0.7 # Used for finding the cross position
 beam_current = 0.5*1e-9 # Beam current (in A)
+
+show_plots = True
 
 e = 1.60217663e-19 # electron charge (in Coulomb)
 
@@ -73,7 +78,3 @@ if pixels % 2 == 0: pixels += 1
 sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
 sigma = sigma/pixel_width # (in px)
 kernel_width = int(2 * np.ceil(3*sigma) + 1) # (in px)
-
-show_plots = True
-
-simulation_runs=0 # For SEM simulation histogram

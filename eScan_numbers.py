@@ -202,7 +202,7 @@ stage_overhead_time_local_alignment = total_stage_movement_local_alignment / sta
 # Pixel scan time
 pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ collector_efficiency) / (beam_current/e)
 
-# Number of FOV images needed to find mark
+# FOV scan time
 FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1) # s
 
 # Alignment time

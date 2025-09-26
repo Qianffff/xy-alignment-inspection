@@ -210,6 +210,7 @@ global_alignment_time, time_breakdown_global_alignment = get_time(procedure_glob
 # print("##################################################################")
 # print_alignment_data(time_breakdown_global_alignment,procedure_global)
 # print("##################################################################")
+
 local_alignment_time,time_breakdown_local_alignment = get_time(procedure_local,'local')
 print("##################################################################")
 print_alignment_data(time_breakdown_local_alignment,procedure_local)

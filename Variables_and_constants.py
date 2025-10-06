@@ -1,10 +1,13 @@
 import numpy as np
 
 # ===================== Parameters =====================
+# Used in 'SEMmodel' and 'SEM_simulation_histogram'
 
-frame_width = 8*1e-6 # Frame width (in m)
-pixel_width = 20*1e-9 # Pixel size (in m)
+frame_width = 16*1e-6 # Frame width (in m)
+pixel_width = 100*1e-9 # Pixel size (in m)
 SNR = 10 # Desired signal to noise ratio
+
+simulation_runs=0 # For 'SEM_simulation_histogram'
 
 # ============ Test alignment procedures ============
 
@@ -15,14 +18,24 @@ SNR = 10 # Desired signal to noise ratio
 # For each step of the alignment procedure, define the frame_width (in m), pixel_width (in m), and desired SNR.
 # Format: step = [frame_width, pixel_width, SNR] and procedure = [step1, step2, ...]
 
-step1 = [8*1e-6, 400*1e-9, 10]
-step2 = [4*1e-6, 40*1e-9, 10]
+step1 = [16*1e-6, 400*1e-9, 10]
+step2 = [8*1e-6, 100*1e-9, 10]
 procedure = [step1, step2]
 
 # ===================== Constants =====================
 
+# Pixel size of real image (not really a pixel, since it approximates reality) (in m)
+pixel_width_real = 16*1e-9
+
+# Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
+# Dimensions in meter
+cross_length =  4*1e-6
+cross_linewidth = 0.6*1e-6
+
 intensity_threshold=0.7 # Used for finding the cross position
-beam_current = 0.5e-9 # Beam current (in A)
+beam_current = 0.5*1e-9 # Beam current (in A)
+
+show_plots = True
 
 e = 1.60217663e-19 # electron charge (in Coulomb)
 
@@ -33,11 +46,6 @@ SE_yield_cross_edge = 1 # SE yield of the cross edges (excluding background)
 SE_yield_cross_body = 0.5 # SE yield of the cross body (excluding background)
 SE_yield = SE_yield_cross_edge + average_SE_yield_background # Only used to calculate the scan time per pixel
 
-# Create alignment mark (a cross of high SE yield (background +1 in the middle of the grid)
-# Dimensions in meter
-cross_length =  2*1e-6
-cross_linewidth = 0.3*1e-6
-
 FWHM = 8e-9 # Full width half maximum of the electron beam (in m)
 
 # To model beam alignment error, the position of the center of the beam is normally distributed 
@@ -46,9 +54,6 @@ beam_placement_error_std = 8*1e-9 # (8*1e-9 is a guess based on the breakdown of
 
 drift_rate = 5*1e-9/60 # Beam drift rate (in m/s).
 FOV_count = 1 # (Minimum is 1.) Number of FOVs the beam has scanned already. Used to calculate how much beam drift has accumulated.
-
-# Pixel size of real image (not really a pixel, since it approximates reality) (in m)
-pixel_width_real = 8*1e-9
 
 # Optical microscope FOV area (in m)
 ebeam_FOV_width = 8*1e-6
@@ -73,7 +78,3 @@ if pixels % 2 == 0: pixels += 1
 sigma = FWHM/(2*np.sqrt(2*np.log(2))) # (in m)
 sigma = sigma/pixel_width # (in px)
 kernel_width = int(2 * np.ceil(3*sigma) + 1) # (in px)
-
-show_plots = True
-
-simulation_runs=0 # For SEM simulation histogram

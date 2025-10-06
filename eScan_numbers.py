@@ -208,6 +208,7 @@ FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_wi
 # Alignment time
 
 global_alignment_time, time_breakdown_global_alignment = get_time(procedure_global,'global')
+print(time_breakdown_global_alignment)
 # print("##################################################################")
 # print_alignment_data(time_breakdown_global_alignment,procedure_global)
 # print("##################################################################")
@@ -287,3 +288,55 @@ print(f"Scanning fraction = {scanning_fraction:.5f}")
 print(f"Effective throughput = {effective_throughput*1e6*3600:.2f} mm²/h")
 print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600:.2f} mm²/h")
 print(f"Relative throughput loss = {relative_troughput_loss*100:.3f} %")
+
+###################### Plot alignement time breakdown #########################
+import plotly.graph_objects as go
+
+data = time_breakdown_global_alignment
+
+labels = []
+parents = []
+values = []
+ids = []          # Unique ids for nodes
+display_labels = []  # Shorter labels to display on chart
+
+def add_node(name, parent, value=None, display_name=None):
+    labels.append(name)
+    parents.append(parent)
+    values.append(value if value is not None else 0)
+    ids.append(name)  # id is full name (unique)
+    display_labels.append(display_name if display_name else name)
+
+for mark, steps in data.items():
+    add_node(mark, "", display_name=mark)  # top-level node, display mark as-is
+
+    for step, timings in steps.items():
+        if isinstance(timings, dict):
+            step_node = f"{mark} - {step}"
+            add_node(step_node, mark, display_name=step)  # shorter label for step
+
+            for timing_name, timing_value in timings.items():
+                timing_node = f"{mark} - {step} - {timing_name}"
+                add_node(timing_node, step_node, timing_value, display_name=timing_name)
+        else:
+            direct_node = f"{mark} - Mark stage movement time"
+            add_node(direct_node, mark, timings, display_name="Mark stage movement time")
+
+fig = go.Figure(go.Sunburst(
+    ids=ids,
+    labels=display_labels,
+    parents=parents,
+    values=values,
+    branchvalues="remainder",
+    hoverinfo="label+value+percent parent+percent entry",
+    insidetextorientation='auto'  # Try 'radial', 'tangential', or 'auto'
+))
+
+
+fig.update_layout(
+    title="Multi-Beam SEM Alignment Time Breakdown (Sunburst View)",
+    margin=dict(t=40, l=0, r=0, b=0)
+)
+
+fig.write_image("sunburst_chart.pdf", format="pdf")
+print("Sunburst chart saved as PDF: sunburst_chart.pdf")

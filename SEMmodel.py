@@ -9,7 +9,7 @@ from Variables_and_constants import *
 grid, cross_center = real_image()  
 
 # Use Gaussian distribution to meassure image
-picture_grid = measure_image(grid,pixel_width,SNR)
+picture_grid = measure_image(grid,200e-9,SNR)
 
 # Calculate the position of the cross from the image
 cross_center_measured_px = cross_position(picture_grid,intensity_threshold)
@@ -29,6 +29,7 @@ if show_plots == True:
     plt.imshow(grid)
     plt.title('Secondary electron yield grid')
     plt.colorbar()
+    plt.savefig("Secondary electron yield grid.svg")
     plt.show(block=False)
     plt.pause(0.5)
 
@@ -38,6 +39,7 @@ if show_plots == True:
     plt.title('Simulated SEM image')
     plt.colorbar()
     plt.tight_layout()
+    plt.savefig("Simulated SEM image.svg")
     plt.show(block=False)
     plt.pause(0.5)
     
@@ -52,5 +54,6 @@ if show_plots == True:
     plt.scatter(cross_center_measured_px[1], cross_center_measured_px[0], c='red', marker='+', s=200, label='Center')
     plt.legend()
     plt.tight_layout()
+    plt.savefig("Simulated SEM image denoised.svg")
     plt.show(block=True)
     plt.pause(0.5)

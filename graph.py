@@ -12,11 +12,11 @@ y = [0.018,1.015,10.731,40.267,72.947,99.118]
 x_arr = np.logspace(np.log10(np.min(x)/5),np.log10(np.max(x)*2),100)
 popt,pcov = curve_fit(g,x,y,maxfev=10000)
 y_arr = g(x_arr,popt[0],popt[1],popt[2],popt[3])
-print(popt)
 
 plt.figure(figsize=(6,6))
 plt.plot(x[3:],y[3:],'k.')
 labels = ['eScan1100','eScan2200','eScan3000']
+plt.grid()
 plt.plot(x_arr,y_arr,zorder=0)
 plt.scatter(x[0],y[0], c='k', marker='.', s=200)
 plt.scatter(x[1],y[1], c='k', marker='.', s=200)

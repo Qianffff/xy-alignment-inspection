@@ -10,9 +10,49 @@ def g(x,a,b,c,d):
 x1 = [88.128,1251.273,17978.985,100816.737,403266.946,16654552.21]
 y1 = [0.018,1.015,10.731,40.267,72.947,99.118]
 
+### Area based
 # 
-x2 = []
-y2 = []
+x_area__beam_number = [88.128,1251.273,17994.312]
+y_area__beam_number = [0.018,1.015,12.850]
+
+# 
+x_area__mixed = [88.128,1251.273,17990.904]
+y_area__mixed = [0.018,1.015,6.48]
+
+# 
+x_area__beam_current = [88.128,1251.273,17999.792]
+y_area__beam_current = [0.018,1.015,4.633]
+
+#
+x_area = [x_area__beam_number,x_area__mixed,x_area__beam_current]
+y_area = [y_area__beam_number,y_area__mixed,y_area__beam_current]
+### Grid based
+# 
+x_grid__beam_number = [88.128,1251.273,17994.312]
+y_grid__beam_number = [0.018,1.015,1.015]
+
+# 
+x_grid__mixed = [88.128,1251.273,17990.904]
+y_grid__mixed = [0.018,1.015,1.788]
+
+# 
+x_grid__beam_current = [88.128,1251.271,17999.792]
+y_grid__beam_current = [0.018,1.015,4.632]
+
+### Time / error buildup based
+# 
+x_time__beam_number = []
+y_time__beam_number = []
+
+# 
+x_time__mixed = []
+y_time__mixed = []
+
+# 
+x_time__beam_current = []
+y_time__beam_current = []
+
+
 
 x_arr = np.logspace(np.log10(np.min(x1)/5),np.log10(x1[2]*2),100)
 popt,pcov = curve_fit(g,x1,y1,maxfev=10000)

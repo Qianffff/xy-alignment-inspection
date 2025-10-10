@@ -96,7 +96,7 @@ SE_yield = 1
 SE_escape_factor = 0.2                
 collector_efficiency = 0.8
 cross_length = 4*1e-6 # m
-pixel_width = 5e-9 # m
+pixel_width = 5e-9 # Pixel width during inspection (m)
 beam_overhead_rate = 0.1 # s/m
 latency = (0.1 + 1 + 0.1)*1e-3 # s
 
@@ -109,72 +109,71 @@ total_stage_movement_local_alignment = 42e-3 # (in m) 42e-3 is the distance to g
 # Constants
 e = 1.602e-19 # C
 
+#################### Define alignment procedures 1100 and 2200 ###########################
+if True:
+    
+    # An alignment procedure is built up like this:
+    #
+    # procedure = [mark_1,mark_2,mark_3,...] (5 marks for global alignment, 1 mark for local alignment)
+    # mark_i = [step_i_1,step_i_2,...]
+    # step_i.j = [n,pixel_width,SNR]
 
-#################### Define alignment procedures ###########################
+    # Create global alignment procedure for the 2200:
 
+    n_min = (2*cross_length)**2 / FOV_area_2200 # Minimum number of FOVs needed to image the full cross (with some margin)
 
-# An alignment procedure is built up like this:
-#
-# procedure = [mark_1,mark_2,mark_3,...] (5 marks for global alignment, 1 mark for local alignment)
-# mark_i = [step_i_1,step_i_2,...]
-# step_i.j = [n,pixel_width,SNR]
+    step_1_1 = [300, 20e-9, 5]
+    step_1_2 = [n_min, 5e-9, 10]
+    mark_1 = [step_1_1,step_1_2]
 
-# Create global alignment procedure for the 2200:
+    step_2_1 = [30, 20e-9, 5]
+    step_2_2 = [n_min, 5e-9, 10]
+    mark_2 = [step_2_1, step_2_2]
 
-n_min = (2*cross_length)**2 / FOV_area_2200 # Minimum number of FOVs needed to image the full cross (with some margin)
+    step_3_1 = [n_min, 5e-9, 10]
+    mark_3 = [step_3_1]
 
-step_1_1 = [300, 20e-9, 5]
-step_1_2 = [n_min, 5e-9, 10]
-mark_1 = [step_1_1,step_1_2]
+    step_4_1 = [n_min, 5e-9, 10]
+    mark_4 = [step_4_1]
 
-step_2_1 = [30, 20e-9, 5]
-step_2_2 = [n_min, 5e-9, 10]
-mark_2 = [step_2_1, step_2_2]
+    step_5_1 = [n_min, 5e-9, 10]
+    mark_5 = [step_5_1]
 
-step_3_1 = [n_min, 5e-9, 10]
-mark_3 = [step_3_1]
+    procedure_2200_global = [mark_1,mark_2,mark_3,mark_4,mark_5]
 
-step_4_1 = [n_min, 5e-9, 10]
-mark_4 = [step_4_1]
+    # Create local alignment procedure for the 2200:
 
-step_5_1 = [n_min, 5e-9, 10]
-mark_5 = [step_5_1]
+    step_1_1 = [n_min, 5e-9, 10]
+    mark_1 = [step_1_1]
+    procedure_2200_local = [mark_1]
 
-procedure_2200_global = [mark_1,mark_2,mark_3,mark_4,mark_5]
+    # Create global alignment procedure for the 1100:
 
-# Create local alignment procedure for the 2200:
+    n_min = (2*cross_length)**2 / FOV_area_1100 # Minimum number of FOVs needed to image the full cross (with some margin)
 
-step_1_1 = [n_min, 5e-9, 10]
-mark_1 = [step_1_1]
-procedure_2200_local = [mark_1]
+    step_1_1 = [5, 20e-9, 5]
+    step_1_2 = [n_min, 5e-9, 10]
+    mark_1 = [step_1_1,step_1_2]
 
-# Create global alignment procedure for the 1100:
+    step_2_1 = [n_min, 5e-9, 10]
+    mark_2 = [step_2_1]
 
-n_min = (2*cross_length)**2 / FOV_area_1100 # Minimum number of FOVs needed to image the full cross (with some margin)
+    step_3_1 = [n_min, 5e-9, 10]
+    mark_3 = [step_3_1]
 
-step_1_1 = [5, 20e-9, 5]
-step_1_2 = [n_min, 5e-9, 10]
-mark_1 = [step_1_1,step_1_2]
+    step_4_1 = [n_min, 5e-9, 10]
+    mark_4 = [step_4_1]
 
-step_2_1 = [n_min, 5e-9, 10]
-mark_2 = [step_2_1]
+    step_5_1 = [n_min, 5e-9, 10]
+    mark_5 = [step_5_1]
 
-step_3_1 = [n_min, 5e-9, 10]
-mark_3 = [step_3_1]
+    procedure_1100_global = [mark_1,mark_2,mark_3,mark_4,mark_5]
 
-step_4_1 = [n_min, 5e-9, 10]
-mark_4 = [step_4_1]
+    # Create local alignment procedure for the 1100:
 
-step_5_1 = [n_min, 5e-9, 10]
-mark_5 = [step_5_1]
-
-procedure_1100_global = [mark_1,mark_2,mark_3,mark_4,mark_5]
-
-# Create local alignment procedure for the 1100:
-
-step_1_1 = [n_min, 5e-9, 10]
-mark_1 = [step_1_1]
-procedure_1100_local = [mark_1]
+    step_1_1 = [n_min, 5e-9, 10]
+    mark_1 = [step_1_1]
+    procedure_1100_local = [mark_1]
 
 ################## Quick switch between machine settings #########################
 
@@ -183,9 +182,72 @@ procedure_1100_local = [mark_1]
 settings1100 = ['1100', beam_number_1100, beam_current_1100, beam_pitch_1100, FOV_area_1100, n_align_per_grid_1100, procedure_1100_global, procedure_1100_local]
 settings2200 = ['2200', beam_number_2200, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 settings3000 = ['3000', beam_number_2200*10.7, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
-settings_test = ['test', beam_number_2200*60*4, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
+settings_test = ['test', beam_number_2200*3.8, beam_current_2200*3.8, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 
-machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings2200
+# Define alignment procedures 3000 and 'test'
+if True:
+# Create global alignment procedure for the 3000:
+
+    FOV_area_3000 = settings3000[4]
+    n_min = (2*cross_length)**2 / FOV_area_3000 # Minimum number of FOVs needed to image the full cross (with some margin)
+
+    step_1_1 = [300, 20e-9, 5]
+    step_1_2 = [n_min, 5e-9, 10]
+    mark_1 = [step_1_1,step_1_2]
+
+    step_2_1 = [30, 20e-9, 5]
+    step_2_2 = [n_min, 5e-9, 10]
+    mark_2 = [step_2_1, step_2_2]
+
+    step_3_1 = [n_min, 5e-9, 10]
+    mark_3 = [step_3_1]
+
+    step_4_1 = [n_min, 5e-9, 10]
+    mark_4 = [step_4_1]
+
+    step_5_1 = [n_min, 5e-9, 10]
+    mark_5 = [step_5_1]
+
+    settings3000[6] = [mark_1,mark_2,mark_3,mark_4,mark_5]
+
+    # Create local alignment procedure for the 3000:
+
+    step_1_1 = [n_min, 5e-9, 10]
+    mark_1 = [step_1_1]
+    settings3000[7] = [mark_1]
+    
+    
+    # Create global alignment procedure for the 'test':
+
+    FOV_area_test = settings_test[4]
+    n_min = (2*cross_length)**2 / FOV_area_test # Minimum number of FOVs needed to image the full cross (with some margin)
+
+    step_1_1 = [300, 20e-9, 5]
+    step_1_2 = [n_min, 5e-9, 10]
+    mark_1 = [step_1_1,step_1_2]
+
+    step_2_1 = [30, 20e-9, 5]
+    step_2_2 = [n_min, 5e-9, 10]
+    mark_2 = [step_2_1, step_2_2]
+
+    step_3_1 = [n_min, 5e-9, 10]
+    mark_3 = [step_3_1]
+
+    step_4_1 = [n_min, 5e-9, 10]
+    mark_4 = [step_4_1]
+
+    step_5_1 = [n_min, 5e-9, 10]
+    mark_5 = [step_5_1]
+
+    settings_test[6] = [mark_1,mark_2,mark_3,mark_4,mark_5]
+
+    # Create local alignment procedure for the 'test':
+
+    step_1_1 = [n_min, 5e-9, 10]
+    mark_1 = [step_1_1]
+    settings_test[7] = [mark_1]
+
+machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings_test
 
 ############################# Calculations ####################################
 
@@ -208,7 +270,6 @@ FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_wi
 # Alignment time
 
 global_alignment_time, time_breakdown_global_alignment = get_time(procedure_global,'global')
-print(time_breakdown_global_alignment)
 # print("##################################################################")
 # print_alignment_data(time_breakdown_global_alignment,procedure_global)
 # print("##################################################################")
@@ -243,6 +304,9 @@ for mark in procedure_global:
 
 # Assume that you need realignment at fixed area intervals:
 scanned_area_per_alignment = 24.17*1e-6 # m² # This means local alignment must be done for every 24.17 mm² that is scanned. (24.17 mm² is the grid area of the eScan2200.)
+# Assume you need realignment once per grid
+scanned_area_per_alignment = grid_area
+
 scan_time_per_alignment = scanned_area_per_alignment / scan_rate
 scanning_fraction = scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)
 effective_throughput = scan_rate * scanning_fraction
@@ -290,53 +354,53 @@ print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600:.2f} mm²/
 print(f"Relative throughput loss = {relative_troughput_loss*100:.3f} %")
 
 ###################### Plot alignement time breakdown #########################
-import plotly.graph_objects as go
+# import plotly.graph_objects as go
 
-data = time_breakdown_global_alignment
+# data = time_breakdown_global_alignment
 
-labels = []
-parents = []
-values = []
-ids = []          # Unique ids for nodes
-display_labels = []  # Shorter labels to display on chart
+# labels = []
+# parents = []
+# values = []
+# ids = []          # Unique ids for nodes
+# display_labels = []  # Shorter labels to display on chart
 
-def add_node(name, parent, value=None, display_name=None):
-    labels.append(name)
-    parents.append(parent)
-    values.append(value if value is not None else 0)
-    ids.append(name)  # id is full name (unique)
-    display_labels.append(display_name if display_name else name)
+# def add_node(name, parent, value=None, display_name=None):
+#     labels.append(name)
+#     parents.append(parent)
+#     values.append(value if value is not None else 0)
+#     ids.append(name)  # id is full name (unique)
+#     display_labels.append(display_name if display_name else name)
 
-for mark, steps in data.items():
-    add_node(mark, "", display_name=mark)  # top-level node, display mark as-is
+# for mark, steps in data.items():
+#     add_node(mark, "", display_name=mark)  # top-level node, display mark as-is
 
-    for step, timings in steps.items():
-        if isinstance(timings, dict):
-            step_node = f"{mark} - {step}"
-            add_node(step_node, mark, display_name=step)  # shorter label for step
+#     for step, timings in steps.items():
+#         if isinstance(timings, dict):
+#             step_node = f"{mark} - {step}"
+#             add_node(step_node, mark, display_name=step)  # shorter label for step
 
-            for timing_name, timing_value in timings.items():
-                timing_node = f"{mark} - {step} - {timing_name}"
-                add_node(timing_node, step_node, timing_value, display_name=timing_name)
-        else:
-            direct_node = f"{mark} - Mark stage movement time"
-            add_node(direct_node, mark, timings, display_name="Mark stage movement time")
+#             for timing_name, timing_value in timings.items():
+#                 timing_node = f"{mark} - {step} - {timing_name}"
+#                 add_node(timing_node, step_node, timing_value, display_name=timing_name)
+#         else:
+#             direct_node = f"{mark} - Mark stage movement time"
+#             add_node(direct_node, mark, timings, display_name="Mark stage movement time")
 
-fig = go.Figure(go.Sunburst(
-    ids=ids,
-    labels=display_labels,
-    parents=parents,
-    values=values,
-    branchvalues="remainder",
-    hoverinfo="label+value+percent parent+percent entry",
-    insidetextorientation='auto'  # Try 'radial', 'tangential', or 'auto'
-))
+# fig = go.Figure(go.Sunburst(
+#     ids=ids,
+#     labels=display_labels,
+#     parents=parents,
+#     values=values,
+#     branchvalues="remainder",
+#     hoverinfo="label+value+percent parent+percent entry",
+#     insidetextorientation='auto'  # Try 'radial', 'tangential', or 'auto'
+# ))
 
 
-fig.update_layout(
-    title="Multi-Beam SEM Alignment Time Breakdown (Sunburst View)",
-    margin=dict(t=40, l=0, r=0, b=0)
-)
+# fig.update_layout(
+#     title="Multi-Beam SEM Alignment Time Breakdown (Sunburst View)",
+#     margin=dict(t=40, l=0, r=0, b=0)
+# )
 
-fig.write_image("sunburst_chart.pdf", format="pdf")
-print("Sunburst chart saved as PDF: sunburst_chart.pdf")
+# fig.write_image("sunburst_chart.pdf", format="pdf")
+# print("Sunburst chart saved as PDF: sunburst_chart.pdf")

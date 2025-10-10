@@ -6,16 +6,21 @@ from scipy.optimize import curve_fit
 def g(x,a,b,c,d):
     return np.arctan((x-a)*b)*d+c
 
-x = [88.128,1251.273,17978.985,100816.737,403266.946,16654552.21]
-y = [0.018,1.015,10.731,40.267,72.947,99.118]
+# Realignment: area based (24 mm²), settings3000 = ['3000', beam_number_2200*10.7, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200
+x1 = [88.128,1251.273,17978.985,100816.737,403266.946,16654552.21]
+y1 = [0.018,1.015,10.731,40.267,72.947,99.118]
 
-x_arr = np.logspace(np.log10(np.min(x)/5),np.log10(x[2]*2),100)
-popt,pcov = curve_fit(g,x,y,maxfev=10000)
+# 
+x2 = []
+y2 = []
+
+x_arr = np.logspace(np.log10(np.min(x1)/5),np.log10(x1[2]*2),100)
+popt,pcov = curve_fit(g,x1,y1,maxfev=10000)
 y_arr = g(x_arr,popt[0],popt[1],popt[2],popt[3])
 
 plt.figure(figsize=(6,6))
-plt.plot(x[3:],y[3:],'k.')
-#plt.plot(x_arr,y_arr,zorder=0)
+plt.plot(x1[3:],y1[3:],'k.')
+plt.plot(x_arr,y_arr,zorder=0)
 
 xmin = min(x_arr)
 xmax = max(x_arr)
@@ -24,9 +29,9 @@ ymax = 12
 plt.xlim([xmin,xmax])
 plt.ylim([ymin,ymax])
 
-p1x,p1y = [x[0],g(x[0],popt[0],popt[1],popt[2],popt[3])]
-p2x,p2y = [x[1],g(x[1],popt[0],popt[1],popt[2],popt[3])]
-p3x,p3y = [x[2],g(x[2],popt[0],popt[1],popt[2],popt[3])]
+p1x,p1y = [x1[0],g(x1[0],popt[0],popt[1],popt[2],popt[3])]
+p2x,p2y = [x1[1],g(x1[1],popt[0],popt[1],popt[2],popt[3])]
+p3x,p3y = [x1[2],g(x1[2],popt[0],popt[1],popt[2],popt[3])]
 
 plt.scatter(p1x,p1y, c='k', marker='.', s=300)
 plt.scatter(p2x,p2y, c='k', marker='.', s=300)
@@ -51,33 +56,3 @@ plt.tick_params(labelsize=18)
 #plt.title('Relative time spent on alignment vs. ideal throughput',fontsize=18)
 plt.tight_layout()
 plt.show(block = True)
-
-
-
-# # Bar diagram
-
-# # Data
-# machines = ["eScan1100", "eScan2200", "eScan3000"]
-# values = [0.12, 1.75, 25]
-
-# # Create bar chart
-# plt.figure(figsize=(8, 6))
-# bars = plt.bar(machines, values, color="deepskyblue")
-
-# # Add labels on bars
-# for bar, value in zip(bars, values):
-#     plt.text(bar.get_x() + bar.get_width()/2, 
-#              bar.get_height() - (0.1 * bar.get_height()),  # slightly below top
-#              f"{value}", 
-#              ha="center", va="bottom", fontsize=12, color="black")
-
-# # Customize title, labels, and ticks
-# plt.title("Percentage of Wafer Scanned per Hour", fontsize=14)
-# plt.ylabel("Percentage", fontsize=12)
-# plt.xticks(fontsize=12)
-# plt.yticks(fontsize=12)
-
-# # Set y-axis limit (similar to your chart)
-# plt.ylim(0, 30)
-
-# plt.show()

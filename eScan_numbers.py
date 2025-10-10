@@ -185,7 +185,7 @@ settings2200 = ['2200', beam_number_2200, beam_current_2200, beam_pitch_2200, FO
 settings3000 = ['3000', beam_number_2200*10.7, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 settings_test = ['test', beam_number_2200*60*4, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 
-machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings3000
+machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings2200
 
 ############################# Calculations ####################################
 
@@ -292,35 +292,43 @@ print(f"Relative throughput loss = {relative_troughput_loss*100:.3f} %")
 ###################### Plot alignement time breakdown #########################
 import plotly.graph_objects as go
 
-data = time_breakdown_global_alignment
+data = time_breakdown_local_alignment  # Your dictionary
 
 labels = []
 parents = []
 values = []
-ids = []          # Unique ids for nodes
-display_labels = []  # Shorter labels to display on chart
+ids = []
+display_labels = []
 
 def add_node(name, parent, value=None, display_name=None):
     labels.append(name)
     parents.append(parent)
     values.append(value if value is not None else 0)
-    ids.append(name)  # id is full name (unique)
+    ids.append(name)
     display_labels.append(display_name if display_name else name)
 
+# Detect if there is only one mark
+only_one_mark = len(data) == 1
+only_mark_name = next(iter(data)) if only_one_mark else None
+
 for mark, steps in data.items():
-    add_node(mark, "", display_name=mark)  # top-level node, display mark as-is
+    # Only add mark node if there are multiple marks
+    if not only_one_mark:
+        add_node(mark, "", display_name=mark)  # top-level node
+
+    mark_parent = "" if only_one_mark else mark
 
     for step, timings in steps.items():
         if isinstance(timings, dict):
-            step_node = f"{mark} - {step}"
-            add_node(step_node, mark, display_name=step)  # shorter label for step
+            step_node = f"{mark} - {step}" if not only_one_mark else step
+            add_node(step_node, mark_parent, display_name=step)
 
             for timing_name, timing_value in timings.items():
-                timing_node = f"{mark} - {step} - {timing_name}"
+                timing_node = f"{step_node} - {timing_name}"
                 add_node(timing_node, step_node, timing_value, display_name=timing_name)
         else:
-            direct_node = f"{mark} - Mark stage movement time"
-            add_node(direct_node, mark, timings, display_name="Mark stage movement time")
+            direct_node = f"{mark} - Mark stage movement time" if not only_one_mark else "Mark stage movement time"
+            add_node(direct_node, mark_parent, timings, display_name="Mark stage movement time")
 
 fig = go.Figure(go.Sunburst(
     ids=ids,
@@ -329,14 +337,9 @@ fig = go.Figure(go.Sunburst(
     values=values,
     branchvalues="remainder",
     hoverinfo="label+value+percent parent+percent entry",
-    insidetextorientation='auto'  # Try 'radial', 'tangential', or 'auto'
+    insidetextorientation='auto'
 ))
 
 
-fig.update_layout(
-    title="Multi-Beam SEM Alignment Time Breakdown (Sunburst View)",
-    margin=dict(t=40, l=0, r=0, b=0)
-)
-
-fig.write_image("sunburst_chart.pdf", format="pdf")
-print("Sunburst chart saved as PDF: sunburst_chart.pdf")
+fig.write_image("sunburst_chart.svg", format="svg")
+print("Sunburst chart saved as PDF: sunburst_chart.svg")

@@ -24,36 +24,64 @@ time_to_make_picture = pixels**2*scan_time_per_pixel
 
 # ===================== Plot =====================
 if show_plots == True:
-    # Plot the grid of SE yields. This represents what the real wafer pattern looks like.
-    plt.figure(figsize=(12,12))
-    plt.imshow(grid)
-    plt.title('Secondary electron yield grid')
-    plt.colorbar()
+    import matplotlib.pyplot as plt
+
+    # 1. Secondary electron yield grid
+    fig, ax = plt.subplots(figsize=(12, 12))
+    im = ax.imshow(grid)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.ax.tick_params(labelsize=24)  # <-- Make colorbar ticks readable
+    plt.tight_layout()
     plt.savefig("Secondary electron yield grid.svg")
     plt.show(block=False)
     plt.pause(0.5)
 
-    # Plotting of the meassured SEM image
-    plt.figure(figsize=(12,12))
-    plt.imshow(picture_grid)
-    plt.title('Simulated SEM image')
-    plt.colorbar()
+    # 2. Simulated SEM image
+    fig, ax = plt.subplots(figsize=(12, 12))
+    im = ax.imshow(picture_grid)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.ax.tick_params(labelsize=24)
     plt.tight_layout()
     plt.savefig("Simulated SEM image.svg")
     plt.show(block=False)
     plt.pause(0.5)
-    
-    # Plotting the white and black image
-    black_white_grid = detect_and_plot_harris_corners(denoise_image(picture_grid),dot_radius=1,dot_alpha=0.25,k=0.24,percentile=intensity_threshold)
 
-    # Plotting the denoised
-    plt.figure(figsize=(12,12))
-    plt.imshow(denoise_image(picture_grid))
-    plt.title('Simulated SEM image denoised')
-    plt.colorbar()
-    plt.scatter(cross_center_measured_px[1], cross_center_measured_px[0], c='red', marker='+', s=200, label='Center')
-    plt.legend()
+    # 3. Black and white image (already handled inside your function)
+    black_white_grid = detect_and_plot_harris_corners(
+        denoise_image(picture_grid),
+        dot_radius=1,
+        dot_alpha=0.25,
+        k=0.24,
+        percentile=intensity_threshold
+    )
+
+    # 4. Denoised image with marker
+    fig, ax = plt.subplots(figsize=(12, 12))
+    im = ax.imshow(denoise_image(picture_grid))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.ax.tick_params(labelsize=24)
+    ax.scatter(cross_center_measured_px[1], cross_center_measured_px[0], 
+            c='red', marker='+', s=200, label='Center')
+    ax.legend()
     plt.tight_layout()
     plt.savefig("Simulated SEM image denoised.svg")
+    plt.show(block=False)
+    plt.pause(0.5)
+
+    # 5. Denoised image with marker
+    fig, ax = plt.subplots(figsize=(12, 12))
+    im = ax.imshow(denoise_image(picture_grid))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.ax.tick_params(labelsize=24)
+    plt.tight_layout()
+    plt.savefig("Simulated SEM image denoised without marker.svg")
     plt.show(block=True)
     plt.pause(0.5)

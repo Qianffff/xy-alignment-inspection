@@ -64,8 +64,7 @@ def detect_and_plot_harris_corners(
     # Step 7: Display
     if show_plots == True:
         plt.figure(figsize=(10, 10))
-        plt.imshow(cv2.cvtColor(blended, cv2.COLOR_BGR2RGB))
-        plt.title("Harris Corners with Transparent Red Dots")
+        plt.imshow(cv2.cvtColor(base_img, cv2.COLOR_BGR2RGB))
         plt.axis('off')
         plt.show(block=False)
         plt.pause(0.1)

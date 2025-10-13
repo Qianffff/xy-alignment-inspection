@@ -1,11 +1,14 @@
 import numpy as np
 
 # Calculate the time of an alignment procedure
-def get_time(procedure,type='local'):
+def get_time(settings,type='local'):
+    
+    beam_current = settings[2]
+    
     total_time = 0
     time_breakdown = {}
     i = 1
-    for mark in procedure:
+    for mark in settings[7]:
         # Include stage overhead time (for movements to, from, and between marks)
         if type == 'local': total_time += stage_overhead_time_local_alignment
         if type == 'global': total_time += stage_overhead_time_mark_to_mark
@@ -182,7 +185,7 @@ if True:
 settings1100 = ['1100', beam_number_1100, beam_current_1100, beam_pitch_1100, FOV_area_1100, n_align_per_grid_1100, procedure_1100_global, procedure_1100_local]
 settings2200 = ['2200', beam_number_2200, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 settings3000 = ['3000', beam_number_2200*10.7, beam_current_2200*1.344, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
-settings_test = ['test', beam_number_2200*3.8, beam_current_2200*3.8, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
+settings_test = ['test', beam_number_2200*14.38, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
 
 # Define alignment procedures 3000 and 'test'
 if True:
@@ -247,7 +250,8 @@ if True:
     mark_1 = [step_1_1]
     settings_test[7] = [mark_1]
 
-machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings_test
+settings = settings2200
+machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings
 
 ############################# Calculations ####################################
 
@@ -269,12 +273,12 @@ FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_wi
 
 # Alignment time
 
-global_alignment_time, time_breakdown_global_alignment = get_time(procedure_global,'global')
+global_alignment_time, time_breakdown_global_alignment = get_time(settings,'global')
 # print("##################################################################")
 # print_alignment_data(time_breakdown_global_alignment,procedure_global)
 # print("##################################################################")
 
-local_alignment_time,time_breakdown_local_alignment = get_time(procedure_local,'local')
+local_alignment_time,time_breakdown_local_alignment = get_time(settings,'local')
 print("##################################################################")
 print_alignment_data(time_breakdown_local_alignment,procedure_local)
 print("##################################################################")
@@ -305,7 +309,7 @@ for mark in procedure_global:
 # Assume that you need realignment at fixed area intervals:
 scanned_area_per_alignment = 24.17*1e-6 # m² # This means local alignment must be done for every 24.17 mm² that is scanned. (24.17 mm² is the grid area of the eScan2200.)
 # Assume you need realignment once per grid
-scanned_area_per_alignment = grid_area
+# scanned_area_per_alignment = grid_area
 
 scan_time_per_alignment = scanned_area_per_alignment / scan_rate
 scanning_fraction = scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)

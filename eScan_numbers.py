@@ -322,85 +322,85 @@ relative_troughput_loss = absolute_throughput_loss/scan_rate # = 1 - scanning_fr
 
 
 ###################### Print numbers #########################
+if __name__ == "__main__":
+    print(f"Pixel area = {pixel_area*1e18:.0f} nm²")
+    print(f"Pixel scan time = {pixel_scan_time*1e9:.2f} ns")
 
-print(f"Pixel area = {pixel_area*1e18:.0f} nm²")
-print(f"Pixel scan time = {pixel_scan_time*1e9:.2f} ns")
+    print(f"Number of pixels in FOV = {pixels**2:.0f}")
+    print(f"FOV scan time = {FOV_scan_time:.4f} s")
 
-print(f"Number of pixels in FOV = {pixels**2:.0f}")
-print(f"FOV scan time = {FOV_scan_time:.4f} s")
+    print(f"Grid area = {grid_area*1e6:.5f} mm²")
+    print(f"Grid scan time = {grid_scan_time:.5f} s")
 
-print(f"Grid area = {grid_area*1e6:.5f} mm²")
-print(f"Grid scan time = {grid_scan_time:.5f} s")
+    print(f"Number of FOV images for global alignment = {n_eFOVs_to_align_global:.0f}")
+    print(f"Global alignment time = {global_alignment_time:.4f} s")
 
-print(f"Number of FOV images for global alignment = {n_eFOVs_to_align_global:.0f}")
-print(f"Global alignment time = {global_alignment_time:.4f} s")
+    print(f"SNR during inspection = {SNR_inspection:.0f}")
+    print(f"Stage overhead time during global alignment = {stage_overhead_time_per_FOV*n_eFOVs_to_align_global:.6f} s")
+    print(f"Stage overhead time per inspected grid = {stage_overhead_time_per_grid:.6f} s")
+    print(f"Mark-to-mark stage overhead time (for global align) = {stage_overhead_time_mark_to_mark*1e3:.3f} ms")
 
-print(f"SNR during inspection = {SNR_inspection:.0f}")
-print(f"Stage overhead time during global alignment = {stage_overhead_time_per_FOV*n_eFOVs_to_align_global:.6f} s")
-print(f"Stage overhead time per inspected grid = {stage_overhead_time_per_grid:.6f} s")
-print(f"Mark-to-mark stage overhead time (for global align) = {stage_overhead_time_mark_to_mark*1e3:.3f} ms")
+    print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
+    print(f"Scan rate = {scan_rate*1e6*3600:.3f} mm²/h")
 
-print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
-print(f"Scan rate = {scan_rate*1e6*3600:.3f} mm²/h")
+    # Analysis of throughput losses
+    print("#################################################################")
 
-# Analysis of throughput losses
-print("#################################################################")
+    print(f"Scan time per alignment = {scan_time_per_alignment:.3f} s")
+    print(f"Local alignment time = {local_alignment_time:.5f} s")
+    print(f"Scanning fraction = {scanning_fraction:.5f}")
+    print(f"Effective throughput = {effective_throughput*1e6*3600:.2f} mm²/h")
+    print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600:.2f} mm²/h")
+    print(f"Relative throughput loss = {relative_troughput_loss*100:.3f} %")
 
-print(f"Scan time per alignment = {scan_time_per_alignment:.3f} s")
-print(f"Local alignment time = {local_alignment_time:.5f} s")
-print(f"Scanning fraction = {scanning_fraction:.5f}")
-print(f"Effective throughput = {effective_throughput*1e6*3600:.2f} mm²/h")
-print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600:.2f} mm²/h")
-print(f"Relative throughput loss = {relative_troughput_loss*100:.3f} %")
+    ###################### Plot alignement time breakdown #########################
+    # import plotly.graph_objects as go
 
-###################### Plot alignement time breakdown #########################
-# import plotly.graph_objects as go
+    # data = time_breakdown_global_alignment
 
-# data = time_breakdown_global_alignment
+    # labels = []
+    # parents = []
+    # values = []
+    # ids = []          # Unique ids for nodes
+    # display_labels = []  # Shorter labels to display on chart
 
-# labels = []
-# parents = []
-# values = []
-# ids = []          # Unique ids for nodes
-# display_labels = []  # Shorter labels to display on chart
+    # def add_node(name, parent, value=None, display_name=None):
+    #     labels.append(name)
+    #     parents.append(parent)
+    #     values.append(value if value is not None else 0)
+    #     ids.append(name)  # id is full name (unique)
+    #     display_labels.append(display_name if display_name else name)
 
-# def add_node(name, parent, value=None, display_name=None):
-#     labels.append(name)
-#     parents.append(parent)
-#     values.append(value if value is not None else 0)
-#     ids.append(name)  # id is full name (unique)
-#     display_labels.append(display_name if display_name else name)
+    # for mark, steps in data.items():
+    #     add_node(mark, "", display_name=mark)  # top-level node, display mark as-is
 
-# for mark, steps in data.items():
-#     add_node(mark, "", display_name=mark)  # top-level node, display mark as-is
+    #     for step, timings in steps.items():
+    #         if isinstance(timings, dict):
+    #             step_node = f"{mark} - {step}"
+    #             add_node(step_node, mark, display_name=step)  # shorter label for step
 
-#     for step, timings in steps.items():
-#         if isinstance(timings, dict):
-#             step_node = f"{mark} - {step}"
-#             add_node(step_node, mark, display_name=step)  # shorter label for step
+    #             for timing_name, timing_value in timings.items():
+    #                 timing_node = f"{mark} - {step} - {timing_name}"
+    #                 add_node(timing_node, step_node, timing_value, display_name=timing_name)
+    #         else:
+    #             direct_node = f"{mark} - Mark stage movement time"
+    #             add_node(direct_node, mark, timings, display_name="Mark stage movement time")
 
-#             for timing_name, timing_value in timings.items():
-#                 timing_node = f"{mark} - {step} - {timing_name}"
-#                 add_node(timing_node, step_node, timing_value, display_name=timing_name)
-#         else:
-#             direct_node = f"{mark} - Mark stage movement time"
-#             add_node(direct_node, mark, timings, display_name="Mark stage movement time")
-
-# fig = go.Figure(go.Sunburst(
-#     ids=ids,
-#     labels=display_labels,
-#     parents=parents,
-#     values=values,
-#     branchvalues="remainder",
-#     hoverinfo="label+value+percent parent+percent entry",
-#     insidetextorientation='auto'  # Try 'radial', 'tangential', or 'auto'
-# ))
+    # fig = go.Figure(go.Sunburst(
+    #     ids=ids,
+    #     labels=display_labels,
+    #     parents=parents,
+    #     values=values,
+    #     branchvalues="remainder",
+    #     hoverinfo="label+value+percent parent+percent entry",
+    #     insidetextorientation='auto'  # Try 'radial', 'tangential', or 'auto'
+    # ))
 
 
-# fig.update_layout(
-#     title="Multi-Beam SEM Alignment Time Breakdown (Sunburst View)",
-#     margin=dict(t=40, l=0, r=0, b=0)
-# )
+    # fig.update_layout(
+    #     title="Multi-Beam SEM Alignment Time Breakdown (Sunburst View)",
+    #     margin=dict(t=40, l=0, r=0, b=0)
+    # )
 
-# fig.write_image("sunburst_chart.pdf", format="pdf")
-# print("Sunburst chart saved as PDF: sunburst_chart.pdf")
+    # fig.write_image("sunburst_chart.pdf", format="pdf")
+    # print("Sunburst chart saved as PDF: sunburst_chart.pdf")

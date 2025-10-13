@@ -22,7 +22,6 @@ def relative_throughput(settings,align_method):
     FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1) # s
     beam_scan_rate = FOV_area / FOV_scan_time
     beam_number = settings[1]
-    print(beam_number,beam_scan_rate)
     scan_rate = beam_number * beam_scan_rate
     scan_time_per_alignment = scanned_area_per_alignment / scan_rate
     scanning_fraction = scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)
@@ -30,7 +29,8 @@ def relative_throughput(settings,align_method):
     return scan_rate, relative_throughput_loss
 
 def i(method,align_method,n=1000):
-    settings = settings2200
+    import copy
+    settings = copy.deepcopy(settings2200)
     x = np.zeros(n)
     y = np.zeros(n)
     if method == "number":
@@ -43,12 +43,13 @@ def i(method,align_method,n=1000):
         factor = np.geomspace(0.8e-1,400,n)
         beam_number = settings[1]*factor
         beam_current = settings[2]*factor
-    for i in range(n):
-        settings[1] = beam_number[i]
-        settings[2] = beam_current[i]
-        x[i], y[i] = relative_throughput(settings,align_method)
+    for k in range(n):
+        settings[1] = beam_number[k]
+        settings[2] = beam_current[k]
+        x[k], y[k] = relative_throughput(settings,align_method)
     x = x*1e6*3600
     y = y*100
+    print(np.min(x))
     return x,y # REMOVE beam_overhead_rate from get_time function at the end to see what happens!!!
 
 
@@ -59,7 +60,7 @@ for align_method in ["area","grid","time"]:
         plt.plot(x_arr, y_arr,label=method)
     plt.title(align_method)
     plt.legend()
-    plt.xlim(10,1e8)
+    plt.xlim(10,1e10)
     plt.ylim(-0.5,105)
     plt.xscale("log")
     plt.show(block= align_method=='time')

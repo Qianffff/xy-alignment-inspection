@@ -74,7 +74,7 @@ for align_method in ["area","grid","time"]:
         elif method == 'split': label = str(int(distribution*100)) + '/' + str(int((1-distribution)*100))
         plt.plot(x_arr, y_arr,label=label)
     if align_method == 'time': plt.plot([88.128,1251.48],[0.018,1.27982],'k.',markersize=10)
-    else: plt.plot([88.128,1251.273],[0.018,1.015],'k.',markersize=10)
+    else: plt.plot([88.128,1246.71],[0.018,1.158],'k.',markersize=10)
     plt.axvline(17978.985,-0.5,15,color='grey', linestyle='--')
     
     if align_method == 'area': plt.title('Realign every 24 mm²')

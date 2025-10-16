@@ -5,10 +5,13 @@ def get_time(settings,type='local'):
     
     beam_current = settings[2]
     
+    if type == 'local': procedure = settings[7]
+    elif type == 'global': procedure = settings[6]
+    
     total_time = 0
     time_breakdown = {}
     i = 1
-    for mark in settings[7]:
+    for mark in procedure:
         # Include stage overhead time (for movements to, from, and between marks)
         if type == 'local': total_time += stage_overhead_time_local_alignment
         if type == 'global': total_time += stage_overhead_time_mark_to_mark
@@ -96,7 +99,7 @@ n_align_per_grid_2200 = 1
 optical_microscope_accuracy = 10*1e-6 # m
 SNR_inspection = 10 # Signal to noise ratio during inspection
 SE_yield = 1
-SE_escape_factor = 0.2                
+SE_escape_factor = 0.2
 collector_efficiency = 0.8
 cross_length = 4*1e-6 # m
 pixel_width = 5e-9 # Pixel width during inspection (m)
@@ -108,6 +111,9 @@ a = 2*9.81 # stage acceleration (m/s²)
 stage_settling_time = 1*1e-3 # s
 mark_distance_global = 0.15 # m
 total_stage_movement_local_alignment = 42e-3 # (in m) 42e-3 is the distance to go from the center of a 26x33 mm die to the corner and back again
+
+# Total inspection time per wafer
+total_time = 3600 # s
 
 # Constants
 e = 1.602e-19 # C
@@ -279,9 +285,9 @@ global_alignment_time, time_breakdown_global_alignment = get_time(settings,'glob
 # print("##################################################################")
 
 local_alignment_time,time_breakdown_local_alignment = get_time(settings,'local')
-print("##################################################################")
-print_alignment_data(time_breakdown_local_alignment,procedure_local)
-print("##################################################################")
+# print("##################################################################")
+# print_alignment_data(time_breakdown_local_alignment,procedure_local)
+# print("##################################################################")
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time
@@ -312,18 +318,10 @@ scanned_area_per_alignment = 24.17*1e-6 # m² # This means local alignment must 
 # scanned_area_per_alignment = grid_area
 
 scan_time_per_alignment = scanned_area_per_alignment / scan_rate
-scanning_fraction = scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)
+scanning_fraction = ((total_time - global_alignment_time)/total_time) * scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)
 effective_throughput = scan_rate * scanning_fraction
 absolute_throughput_loss = scan_rate - effective_throughput
 relative_troughput_loss = absolute_throughput_loss/scan_rate # = 1 - scanning_fraction
-
-# # Older version: assume you need realignment 'n_realign_per_grid' times per grid (independent of the grid area)
-# scan_time_per_alignement = grid_scan_time / n_realign_per_grid
-# scanning_fraction = scan_time_per_alignement / (local_alignment_time + scan_time_per_alignement)
-# effective_throughput = scan_rate * scanning_fraction
-# absolute_throughput_loss = scan_rate - effective_throughput
-# relative_troughput_loss = absolute_throughput_loss/scan_rate
-
 
 ###################### Print numbers #########################
 if __name__ == "__main__":
@@ -338,6 +336,7 @@ if __name__ == "__main__":
 
     print(f"Number of FOV images for global alignment = {n_eFOVs_to_align_global:.0f}")
     print(f"Global alignment time = {global_alignment_time:.4f} s")
+    print(f"Total local alignment time = {local_alignment_time*((total_time-global_alignment_time)/(scan_time_per_alignment+local_alignment_time)):.5f} s")
 
     print(f"SNR during inspection = {SNR_inspection:.0f}")
     print(f"Stage overhead time during global alignment = {stage_overhead_time_per_FOV*n_eFOVs_to_align_global:.6f} s")
@@ -346,7 +345,7 @@ if __name__ == "__main__":
 
     print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
     print(f"Scan rate = {scan_rate*1e6*3600:.3f} mm²/h")
-
+    
     # Analysis of throughput losses
     print("#################################################################")
 

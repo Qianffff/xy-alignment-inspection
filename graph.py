@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from eScan_numbers import N_SE_required, SE_escape_factor, SE_yield, collector_efficiency, e, pixel_width, beam_overhead_rate, get_time, settings2200
+from eScan_numbers import N_SE_required, SE_escape_factor, SE_yield, collector_efficiency, e, pixel_width, beam_overhead_rate, get_time, settings2200, total_time, global_alignment_time
 
 def relative_throughput(settings,align_method):
     beam_number = settings[1]
@@ -20,9 +20,11 @@ def relative_throughput(settings,align_method):
         grid_area = (np.sqrt(3/4)*beam_pitch**2) * beam_number # sqrt(3/4) due to hexagonal grid shape
         scanned_area_per_alignment = grid_area
     elif align_method == "time":
+        
         accuracy = 18e-9
         time_error_rate = 0.06e-9 + 0.001e-9*(beam_current*beam_number)/(settings2200[1]*settings2200[2]) # m_error/s
         stage_movement_error_rate = 1.2278e-6 # m_error/m_stage_movement
+        
         total_movement_per_grid = (np.sqrt(3/4)*beam_pitch**2)/FOV_area * np.sqrt(FOV_area) + beam_pitch*np.sqrt(beam_number)
         grid_area = (np.sqrt(3/4)*beam_pitch**2) * beam_number # sqrt(3/4) due to hexagonal grid shape
         scanned_area_per_alignment = (grid_area / total_movement_per_grid) * (accuracy / stage_movement_error_rate)
@@ -30,14 +32,15 @@ def relative_throughput(settings,align_method):
         time_error = time_error_rate * scanned_time_per_alignment
         factor = time_error/accuracy
         scanned_area_per_alignment *= 1 - factor
+    
     local_alignment_time = get_time(settings,'local')[0]
     
     scan_time_per_alignment = scanned_area_per_alignment / scan_rate
-    scanning_fraction = scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)
+    scanning_fraction = ((total_time - global_alignment_time)/total_time) *scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)
     relative_throughput_loss = 1 - scanning_fraction
     return scan_rate, relative_throughput_loss
 
-distribution = .4 # 1 is full on number
+distribution = .25 # 1 is full on number
 
 def i(method,align_method,n=1000):
     import copy
@@ -62,7 +65,6 @@ def i(method,align_method,n=1000):
     y = y*100
     return x,y
 
-
 for align_method in ["area","grid","time"]:
     plt.figure()
     for method in ["number","current","split"]:
@@ -76,15 +78,17 @@ for align_method in ["area","grid","time"]:
     plt.axvline(17978.985,-0.5,15,color='grey', linestyle='--')
     
     if align_method == 'area': plt.title('Realign every 24 mm²')
-    elif align_method == 'grid': plt.title('Realign once per grid')
+    elif align_method == 'grid': plt.title('Realign once per full hexagon image')
     elif align_method == 'time': plt.title('Realign based on error build-up')
     
     plt.text(1250,2,'eScan 2200',fontsize=10)
-    plt.text(16000,13.5,'eScan 3000',fontsize=10,rotation=90)
+    plt.text(16000,12.7,'eScan 3000',fontsize=10,rotation=90)
     legend = plt.legend(title='Througput increase due to \n [beam number/beam current] (%):',ncol=3)
     legend.get_title().set_ha('center')
+    plt.xlabel('Throughput (mm²/h)')
+    plt.ylabel('Alignment time (%)')
     plt.xlim(1100,25000)
     plt.ylim(0,18)
     plt.xscale("log")
+    plt.tight_layout()
     plt.show(block= align_method=='time')
-

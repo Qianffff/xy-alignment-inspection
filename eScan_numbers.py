@@ -127,14 +127,12 @@ if True:
     # Create global alignment procedure for the 2200:
 
     n_min = (2*cross_length)**2 / FOV_area_2200 # Minimum number of FOVs needed to image the full cross (with some margin)
-
-    step_1_1 = [300, 20e-9, 5]
+    step_1_1 = [700, 20e-9, 5]
     step_1_2 = [n_min, 5e-9, 10]
     mark_1 = [step_1_1,step_1_2]
 
-    step_2_1 = [30, 20e-9, 5]
-    step_2_2 = [n_min, 5e-9, 10]
-    mark_2 = [step_2_1, step_2_2]
+    step_2_1 = [n_min, 5e-9, 10]
+    mark_2 = [step_2_1]
 
     step_3_1 = [n_min, 5e-9, 10]
     mark_3 = [step_3_1]
@@ -157,7 +155,7 @@ if True:
 
     n_min = (2*cross_length)**2 / FOV_area_1100 # Minimum number of FOVs needed to image the full cross (with some margin)
 
-    step_1_1 = [5, 20e-9, 5]
+    step_1_1 = [11, 20e-9, 5]
     step_1_2 = [n_min, 5e-9, 10]
     mark_1 = [step_1_1,step_1_2]
 
@@ -195,14 +193,13 @@ if True:
 
     FOV_area_3000 = settings3000[4]
     n_min = (2*cross_length)**2 / FOV_area_3000 # Minimum number of FOVs needed to image the full cross (with some margin)
-
-    step_1_1 = [300, 20e-9, 5]
+    
+    step_1_1 = [700, 20e-9, 5]
     step_1_2 = [n_min, 5e-9, 10]
     mark_1 = [step_1_1,step_1_2]
 
-    step_2_1 = [30, 20e-9, 5]
-    step_2_2 = [n_min, 5e-9, 10]
-    mark_2 = [step_2_1, step_2_2]
+    step_2_1 = [n_min, 5e-9, 10]
+    mark_2 = [step_2_1]
 
     step_3_1 = [n_min, 5e-9, 10]
     mark_3 = [step_3_1]
@@ -227,13 +224,12 @@ if True:
     FOV_area_test = settings_test[4]
     n_min = (2*cross_length)**2 / FOV_area_test # Minimum number of FOVs needed to image the full cross (with some margin)
 
-    step_1_1 = [300, 20e-9, 5]
+    step_1_1 = [700, 20e-9, 5]
     step_1_2 = [n_min, 5e-9, 10]
     mark_1 = [step_1_1,step_1_2]
 
-    step_2_1 = [30, 20e-9, 5]
-    step_2_2 = [n_min, 5e-9, 10]
-    mark_2 = [step_2_1, step_2_2]
+    step_2_1 = [n_min, 5e-9, 10]
+    mark_2 = [step_2_1]
 
     step_3_1 = [n_min, 5e-9, 10]
     mark_3 = [step_3_1]
@@ -276,14 +272,14 @@ FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_wi
 # Alignment time
 
 global_alignment_time, time_breakdown_global_alignment = get_time(settings,'global')
-# print("##################################################################")
-# print_alignment_data(time_breakdown_global_alignment,procedure_global)
-# print("##################################################################")
+print("##################################################################")
+print_alignment_data(time_breakdown_global_alignment,procedure_global)
+print("##################################################################")
 
 local_alignment_time,time_breakdown_local_alignment = get_time(settings,'local')
-print("##################################################################")
-print_alignment_data(time_breakdown_local_alignment,procedure_local)
-print("##################################################################")
+# print("##################################################################")
+# print_alignment_data(time_breakdown_local_alignment,procedure_local)
+# print("##################################################################")
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time

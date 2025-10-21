@@ -43,7 +43,6 @@ def get_time(settings,type='local'):
         i += 1
     return total_time, time_breakdown
 
-
 def print_alignment_data(data, procedure, indent=0):
     grand_total = 0  # total across all marks
     mark_totals = {}
@@ -77,8 +76,6 @@ def print_alignment_data(data, procedure, indent=0):
                 print("   " * (indent + 2) + f"{key}: {val:.6f} s")
             j += 1
         i += 1
-
-
 
 ###################### Machine-speficic parameters #############################
 
@@ -186,7 +183,6 @@ if True:
 
 ################## Quick switch between machine settings #########################
 
-
 # [beam_number , beam_current , beam_pitch , FOV_area, n_realign_per_grid]
 settings1100 = ['1100', beam_number_1100, beam_current_1100, beam_pitch_1100, FOV_area_1100, n_align_per_grid_1100, procedure_1100_global, procedure_1100_local]
 settings2200 = ['2200', beam_number_2200, beam_current_2200, beam_pitch_2200, FOV_area_2200, n_align_per_grid_2200, procedure_2200_global, procedure_2200_local]
@@ -256,7 +252,7 @@ if True:
     mark_1 = [step_1_1]
     settings_test[7] = [mark_1]
 
-settings = settings2200
+settings = settings3000
 machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings
 
 ############################# Calculations ####################################
@@ -285,9 +281,9 @@ global_alignment_time, time_breakdown_global_alignment = get_time(settings,'glob
 # print("##################################################################")
 
 local_alignment_time,time_breakdown_local_alignment = get_time(settings,'local')
-# print("##################################################################")
-# print_alignment_data(time_breakdown_local_alignment,procedure_local)
-# print("##################################################################")
+print("##################################################################")
+print_alignment_data(time_breakdown_local_alignment,procedure_local)
+print("##################################################################")
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time
@@ -310,7 +306,6 @@ n_eFOVs_to_align_global = 0
 for mark in procedure_global:
     for step in mark:
         n_eFOVs_to_align_global += step[0]
-
 
 # Assume that you need realignment at fixed area intervals:
 scanned_area_per_alignment = 24.17*1e-6 # m² # This means local alignment must be done for every 24.17 mm² that is scanned. (24.17 mm² is the grid area of the eScan2200.)
@@ -355,55 +350,3 @@ if __name__ == "__main__":
     print(f"Effective throughput = {effective_throughput*1e6*3600:.2f} mm²/h")
     print(f"Absolute throughput loss = {absolute_throughput_loss*1e6*3600:.2f} mm²/h")
     print(f"Relative throughput loss = {relative_troughput_loss*100:.3f} %")
-
-    ###################### Plot alignement time breakdown #########################
-    # import plotly.graph_objects as go
-
-    # data = time_breakdown_global_alignment
-
-    # labels = []
-    # parents = []
-    # values = []
-    # ids = []          # Unique ids for nodes
-    # display_labels = []  # Shorter labels to display on chart
-
-    # def add_node(name, parent, value=None, display_name=None):
-    #     labels.append(name)
-    #     parents.append(parent)
-    #     values.append(value if value is not None else 0)
-    #     ids.append(name)  # id is full name (unique)
-    #     display_labels.append(display_name if display_name else name)
-
-    # for mark, steps in data.items():
-    #     add_node(mark, "", display_name=mark)  # top-level node, display mark as-is
-
-    #     for step, timings in steps.items():
-    #         if isinstance(timings, dict):
-    #             step_node = f"{mark} - {step}"
-    #             add_node(step_node, mark, display_name=step)  # shorter label for step
-
-    #             for timing_name, timing_value in timings.items():
-    #                 timing_node = f"{mark} - {step} - {timing_name}"
-    #                 add_node(timing_node, step_node, timing_value, display_name=timing_name)
-    #         else:
-    #             direct_node = f"{mark} - Mark stage movement time"
-    #             add_node(direct_node, mark, timings, display_name="Mark stage movement time")
-
-    # fig = go.Figure(go.Sunburst(
-    #     ids=ids,
-    #     labels=display_labels,
-    #     parents=parents,
-    #     values=values,
-    #     branchvalues="remainder",
-    #     hoverinfo="label+value+percent parent+percent entry",
-    #     insidetextorientation='auto'  # Try 'radial', 'tangential', or 'auto'
-    # ))
-
-
-    # fig.update_layout(
-    #     title="Multi-Beam SEM Alignment Time Breakdown (Sunburst View)",
-    #     margin=dict(t=40, l=0, r=0, b=0)
-    # )
-
-    # fig.write_image("sunburst_chart.pdf", format="pdf")
-    # print("Sunburst chart saved as PDF: sunburst_chart.pdf")

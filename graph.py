@@ -23,7 +23,7 @@ def relative_throughput(settings,align_method):
         
         accuracy = 18e-9
         time_error_rate = 0.06e-9 + 0.001e-9*(beam_current*beam_number)/(settings2200[1]*settings2200[2]) # m_error/s
-        stage_movement_error_rate = 1.2278e-6 # m_error/m_stage_movement
+        stage_movement_error_rate = 1e-6 # m_error/m_stage_movement
         
         total_movement_per_grid = (np.sqrt(3/4)*beam_pitch**2)/FOV_area * np.sqrt(FOV_area) + beam_pitch*np.sqrt(beam_number)
         grid_area = (np.sqrt(3/4)*beam_pitch**2) * beam_number # sqrt(3/4) due to hexagonal grid shape

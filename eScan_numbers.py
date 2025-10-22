@@ -248,7 +248,7 @@ if True:
     mark_1 = [step_1_1]
     settings_test[7] = [mark_1]
 
-settings = settings3000
+settings = settings2200
 machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings
 
 ############################# Calculations ####################################

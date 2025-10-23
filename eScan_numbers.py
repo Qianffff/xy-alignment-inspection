@@ -248,7 +248,7 @@ if True:
     mark_1 = [step_1_1]
     settings_test[7] = [mark_1]
 
-settings = settings2200
+settings = settings3000
 machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings
 
 ############################# Calculations ####################################
@@ -330,9 +330,9 @@ if __name__ == "__main__":
     print(f"Total local alignment time = {local_alignment_time*((total_time-global_alignment_time)/(scan_time_per_alignment+local_alignment_time)):.5f} s")
 
     print(f"SNR during inspection = {SNR_inspection:.0f}")
-    print(f"Stage overhead time during global alignment = {stage_overhead_time_per_FOV*n_eFOVs_to_align_global:.6f} s")
     print(f"Stage overhead time per inspected grid = {stage_overhead_time_per_grid:.6f} s")
     print(f"Mark-to-mark stage overhead time (for global align) = {stage_overhead_time_mark_to_mark*1e3:.3f} ms")
+    print(f"Total stage overhead time during global alignment = {stage_overhead_time_per_FOV*n_eFOVs_to_align_global + stage_overhead_time_mark_to_mark*5:.6f} s")
 
     print(f"Beam scan rate = {beam_scan_rate*1e12:.0f} µm²/s")
     print(f"Scan rate = {scan_rate*1e6*3600:.3f} mm²/h")

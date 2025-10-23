@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from eScan_numbers import N_SE_required, SE_escape_factor, SE_yield, collector_efficiency, e, pixel_width, beam_overhead_rate, get_time, settings2200, total_time, global_alignment_time
+from eScan_numbers import N_SE_required, SE_escape_factor, SE_yield, collector_efficiency, e, pixel_width, beam_overhead_rate, get_time, settings2200, total_time, global_alignment_time, total_stage_movement_local_alignment
 import copy
 
 def relative_throughput(settings,align_method):
@@ -24,9 +24,9 @@ def relative_throughput(settings,align_method):
         
         accuracy = 10*np.sqrt(2)*1e-9
         time_error_rate = 0.05e-9 # m_error/s
-        stage_movement_error_rate = 1e-6 # m_error/m_stage_movement
+        stage_movement_error_rate = 0.1e-6 # m_error/m_stage_movement
         
-        total_movement_per_grid = (np.sqrt(3/4)*beam_pitch**2)/FOV_area * np.sqrt(FOV_area) + beam_pitch*np.sqrt(beam_number)
+        total_movement_per_grid = (np.sqrt(3/4)*beam_pitch**2)/FOV_area * np.sqrt(FOV_area) + beam_pitch*np.sqrt(beam_number) + total_stage_movement_local_alignment
         grid_area = (np.sqrt(3/4)*beam_pitch**2) * beam_number # sqrt(3/4) due to hexagonal grid shape
         scanned_area_per_alignment = (grid_area / total_movement_per_grid) * (accuracy / stage_movement_error_rate)
         scanned_time_per_alignment = scanned_area_per_alignment/scan_rate

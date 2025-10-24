@@ -272,14 +272,16 @@ FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_wi
 # Alignment time
 
 global_alignment_time, time_breakdown_global_alignment = get_time(settings,'global')
-print("##################################################################")
-print_alignment_data(time_breakdown_global_alignment,procedure_global)
-print("##################################################################")
-
 local_alignment_time,time_breakdown_local_alignment = get_time(settings,'local')
-# print("##################################################################")
-# print_alignment_data(time_breakdown_local_alignment,procedure_local)
-# print("##################################################################")
+
+if __name__ == "__main__":
+    print("##################################################################")
+    print_alignment_data(time_breakdown_global_alignment,procedure_global)
+    print("##################################################################")
+
+    # print("##################################################################")
+    # print_alignment_data(time_breakdown_local_alignment,procedure_local)
+    # print("##################################################################")
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time

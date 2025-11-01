@@ -251,6 +251,8 @@ if True:
 settings = settings3000
 machine, beam_number, beam_current, beam_pitch, FOV_area, n_realign_per_grid, procedure_global, procedure_local = settings
 
+realign_method = 'drift' # Choose between 'area', 'grid', and 'drift'
+
 ############################# Calculations ####################################
 
 FOV_width = np.sqrt(FOV_area)
@@ -270,18 +272,33 @@ pixel_scan_time = ((N_SE_required / SE_escape_factor) / SE_yield/ collector_effi
 FOV_scan_time = pixel_scan_time * pixels**2 + beam_overhead_rate*pixels*pixel_width*(pixels-1) # s
 
 # Alignment time
-
 global_alignment_time, time_breakdown_global_alignment = get_time(settings,'global')
 local_alignment_time,time_breakdown_local_alignment = get_time(settings,'local')
 
-if __name__ == "__main__":
-    print("##################################################################")
-    print_alignment_data(time_breakdown_global_alignment,procedure_global)
-    print("##################################################################")
+# # Dedicated e-beam:
+# global_alignment_time = 6.9306335
+# local_alignment_time = 0
 
+# # Diffraction:
+# global_alignment_time = 4.116528
+# local_alignment_time = 0
+
+# # Computational:
+# global_alignment_time = 0
+# local_alignment_time = 0
+
+# # Multibeam:
+# global_alignment_time = global_alignment_time
+# local_alignment_time = 0.1142
+
+if __name__ == "__main__":
     # print("##################################################################")
-    # print_alignment_data(time_breakdown_local_alignment,procedure_local)
+    # print_alignment_data(time_breakdown_global_alignment,procedure_global)
     # print("##################################################################")
+
+    print("##################################################################")
+    print_alignment_data(time_breakdown_local_alignment,procedure_local)
+    print("##################################################################")
 
 # Beam scan rate (per beam)
 beam_scan_rate = FOV_area / FOV_scan_time
@@ -305,16 +322,30 @@ for mark in procedure_global:
     for step in mark:
         n_eFOVs_to_align_global += step[0]
 
-# Assume that you need realignment at fixed area intervals:
-scanned_area_per_alignment = 24.17*1e-6 # m² # This means local alignment must be done for every 24.17 mm² that is scanned. (24.17 mm² is the grid area of the eScan2200.)
-# Assume you need realignment once per grid
-# scanned_area_per_alignment = grid_area
+# Determine the scanned area per alignment given the realignment method
+if realign_method == 'area': # Assume that you need realignment at fixed area intervals:
+    scanned_area_per_alignment = 24.17*1e-6 # m² # This means local alignment must be done for every 24.17 mm² that is scanned. (24.17 mm² is the grid area of the eScan2200.)
+elif realign_method == 'grid': # Assume you need realignment once per grid
+    scanned_area_per_alignment = grid_area
+elif realign_method == 'drift': # Realignment based on accuracy drift buildup
+    accuracy = 16.36*1e-9 # (m)
+    time_error_rate = 0.1786*1e-9 # (m_error/s)
+    stage_movement_error_rate = 0.1*1e-6 # (m_error/m_stage_movement)
+    c = 0.9e-10 # Proportionality constant in model of wafer expansion due to the beams heating it up
+
+    t1 = 0.0325 # Stage movement time from alignment mark to inspection area (s)
+    d1 = 13*1e-3 # Stage movement distance fram alignment mark to inspection area (m)
+    e1 = time_error_rate*t1 + stage_movement_error_rate*d1 # Calculate drift buildup
+
+    v = 0.124843*1e-3 # Stage speed during inspection
+    d = (accuracy-e1)/(stage_movement_error_rate + time_error_rate/v + beam_number*c) # Travel distance of the stage during inspection before realignment is necessary
+    scanned_area_per_alignment = d*np.sqrt(FOV_area)*beam_number
 
 scan_time_per_alignment = scanned_area_per_alignment / scan_rate
 scanning_fraction = ((total_time - global_alignment_time)/total_time) * scan_time_per_alignment / (local_alignment_time + scan_time_per_alignment)
 effective_throughput = scan_rate * scanning_fraction
 absolute_throughput_loss = scan_rate - effective_throughput
-relative_troughput_loss = absolute_throughput_loss/scan_rate # = 1 - scanning_fraction
+relative_troughput_loss = 1 - scanning_fraction
 
 ###################### Print numbers #########################
 if __name__ == "__main__":

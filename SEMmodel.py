@@ -2,7 +2,6 @@ from Kernel_and_convolution import *
 from Cross_detection import *
 from Image_creation import *
 from Denoise_functions import *
-from Function_graveyard import *
 from Variables_and_constants import *
 
 # Generate wafer image
@@ -34,7 +33,6 @@ if show_plots == True:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.ax.tick_params(labelsize=24)  # <-- Make colorbar ticks readable
     plt.tight_layout()
-    plt.savefig("Secondary electron yield grid.svg")
     plt.show(block=False)
     plt.pause(0.5)
 
@@ -46,7 +44,6 @@ if show_plots == True:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.ax.tick_params(labelsize=24)
     plt.tight_layout()
-    plt.savefig("Simulated SEM image.svg")
     plt.show(block=False)
     plt.pause(0.5)
 
@@ -70,7 +67,6 @@ if show_plots == True:
             c='red', marker='+', s=200, label='Center')
     ax.legend()
     plt.tight_layout()
-    plt.savefig("Simulated SEM image denoised.svg")
     plt.show(block=False)
     plt.pause(0.5)
 
@@ -82,6 +78,5 @@ if show_plots == True:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.ax.tick_params(labelsize=24)
     plt.tight_layout()
-    plt.savefig("Simulated SEM image denoised without marker.svg")
     plt.show(block=True)
     plt.pause(0.5)
